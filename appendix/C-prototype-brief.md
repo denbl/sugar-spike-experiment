@@ -24,7 +24,6 @@ A reviewer opens one link and understands in a minute:
 1. Header: title, one-line idea, three links (user flow, experiment design, impact model).
 2. Demo stage: the phone at real iPhone size, a short caption for each step, a narrow controls column (test or control group, steps, reset).
 3. Below the stage: Experiment design and Impact model.
-4. Variant B (personalised.html): the same phone, but the app first waits for the user's own spike → dip → snack pattern, shows it on the user's chart and only then offers the reminder.
 
 ## 4. User flow on the phone
 
