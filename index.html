@@ -6,7 +6,7 @@
 <title>Walk off the sugar spike – experiment prototype</title>
 <style>
   :root {
-    /* Page world: trail guide. White map paper, iron ink, contour hairlines, one signpost yellow. */
+    /* Page world: trail guide. White map paper, iron ink, one signpost yellow. */
     --paper: #ffffff;
     --field: #f3f4f1;
     --ink: #15181a;
@@ -14,7 +14,6 @@
     --ink-3: #666b6e;
     --rule: #dedad2;
     --rule-2: #c9c3b8;
-    --contour: #b4916b;
     --sign: #ffd100;
     --spike: #d4520f;
     --walk: #1f7a4d;
@@ -61,40 +60,49 @@
   .post:hover { transform: translateX(4px); }
   .post:focus-visible { outline: none; transform: translateX(4px); box-shadow: inset 0 0 0 2px var(--ink); }
 
-  /* ================= Page grid ================= */
-  .page { max-width: 1440px; margin: 0 auto; padding: 28px 40px 24px; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 48px; align-items: start; }
-  .stage { position: relative; display: flex; gap: 22px; align-items: flex-start; padding: 22px; background: var(--field); border: 1px solid var(--rule); overflow: hidden; isolation: isolate; }
-  .stage .contours { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
-  .stage .contours path { fill: none; stroke: var(--contour); stroke-width: 1; opacity: .32; }
-  .stage .contours path:nth-child(5n) { stroke-width: 1.6; opacity: .42; }
-  .memo { min-width: 0; }
-  @media (min-width: 1280px) and (min-height: 760px) { .stage { position: sticky; top: 16px; } }
-
-  @media (max-width: 1279px) {
-    .page { grid-template-columns: 1fr; gap: 36px; }
-    .stage { justify-content: center; }
-    .memo { max-width: 880px; width: 100%; margin: 0 auto; }
-  }
   @media (max-width: 860px) {
     .mast-in { grid-template-columns: 1fr; padding: 24px 20px 22px; }
     .posts::before { top: 0; bottom: -22px; }
     .post { width: 100%; max-width: 420px; }
     .mast h1 { font-size: 36px; }
   }
-  @media (max-width: 700px) {
-    .page { padding: 0 0 24px; gap: 28px; }
-    .stage { flex-direction: column; align-items: center; padding: 20px 16px; border-width: 0 0 1px; }
-    .memo { padding: 0 16px; }
+  @media (max-width: 760px) {
     .mast h1 { font-size: 32px; }
     .mast .dek { font-size: 16px; }
     .mast .sub { font-size: 15px; }
   }
 
+  /* ================= Demo stage: caption | phone | controls ================= */
+  .stage { background: var(--field); border-bottom: 1px solid var(--rule); }
+  .stage-in { max-width: 1440px; margin: 0 auto; padding: 40px 40px 48px; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    grid-template-areas: "cap phone ctrl"; gap: 0 36px; align-items: start; }
+  .stage .phone { grid-area: phone; }
+  .cap-col { grid-area: cap; justify-self: end; width: 100%; max-width: 290px; margin-top: 132px; }
+  .caption { position: relative; background: var(--ink); color: #fff; border-radius: 14px; padding: 14px 16px 15px; font-size: 15px; line-height: 1.45;
+    box-shadow: 0 12px 28px -12px rgba(21, 24, 26, .5); }
+  .caption::after { content: ""; position: absolute; right: -8px; top: 26px; width: 16px; height: 16px; background: var(--ink); transform: rotate(45deg); border-radius: 2px; }
+  .caption .kick { display: block; margin-bottom: 5px; font-size: 11.5px; font-weight: 750; letter-spacing: .07em; text-transform: uppercase; color: var(--sign); }
+  .caption p { margin: 0; position: relative; z-index: 1; }
+
+  /* Medium screens: caption above the controls, pointer toward the phone on the left. */
+  @media (max-width: 1099px) {
+    .stage-in { grid-template-columns: auto 280px; grid-template-rows: auto 1fr; grid-template-areas: "phone cap" "phone ctrl"; justify-content: center; gap: 0 32px; padding: 32px 24px 40px; }
+    .cap-col { justify-self: stretch; max-width: none; margin: 96px 0 22px; }
+    .caption { min-height: 180px; }
+    .caption::after { right: auto; left: -8px; }
+  }
+  /* Narrow screens: caption, phone, controls in one column; pointer down to the phone. */
+  @media (max-width: 760px) {
+    .stage-in { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-template-areas: "cap" "phone" "ctrl"; justify-items: center; padding: 20px 16px 28px; }
+    .cap-col { width: 100%; max-width: 375px; margin: 0 0 18px; }
+    .caption { min-height: 150px; }
+    .caption::after { left: 50%; top: auto; bottom: -8px; margin-left: -8px; }
+  }
   /* ================= Phone (native iOS) ================= */
   .phone { flex: none; width: 375px; height: 780px; border-radius: 54px; background: #121314; padding: 11px; position: relative;
     box-shadow: 0 1px 0 1px #2d3133 inset, 0 2px 4px rgba(21, 24, 26, .18), 0 24px 48px -12px rgba(21, 24, 26, .38); }
-  @media (min-width: 701px) and (max-height: 920px) { .phone { zoom: .86; } }
-  @media (min-width: 701px) and (max-height: 860px) { .phone { zoom: .8; } }
+  @media (min-width: 761px) and (max-height: 920px) { .phone { zoom: .86; } }
+  @media (min-width: 761px) and (max-height: 860px) { .phone { zoom: .8; } }
   @media (max-width: 400px) { .phone { zoom: .9; } }
   .screen { position: relative; width: 100%; height: 100%; border-radius: 43px; overflow: hidden; background: var(--ios-bg); color: var(--ios-label); font-family: var(--sans); font-size: 15px; line-height: 1.35; letter-spacing: -.01em; }
   .island { position: absolute; top: 11px; left: 50%; transform: translateX(-50%); width: 114px; height: 33px; border-radius: 20px; background: #000; z-index: 30; }
@@ -215,10 +223,10 @@
   .snackbar svg { flex: none; }
 
   /* ================= Demo controls: the trail ================= */
-  .demo { width: 252px; flex: none; background: var(--paper); border: 1px solid var(--rule-2); padding: 18px 18px 16px; font-size: 14px; line-height: 1.4; }
-  @media (max-width: 700px) { .demo { width: 100%; max-width: 375px; } }
-  .demo h2 { margin: 0; font-size: 16px; font-weight: 700; letter-spacing: -.01em; }
-  .demo .hint { margin: 3px 0 14px; font-size: 13px; color: var(--ink-3); }
+  .demo { grid-area: ctrl; justify-self: start; width: 280px; background: var(--paper); border: 1px solid var(--rule-2); border-radius: 12px; padding: 16px 18px 14px; font-size: 14px; line-height: 1.4; }
+  @media (max-width: 1099px) { .demo { width: 100%; } }
+  @media (max-width: 760px) { .demo { justify-self: center; max-width: 375px; margin-top: 22px; } }
+  .demo-lbl { margin: 0 0 10px; font-size: 11.5px; font-weight: 750; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-3); }
   .seg { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--ink); border-radius: 8px; overflow: hidden; }
   .seg button { border: 0; background: var(--paper); padding: 8px 6px; font-size: 13px; font-weight: 600; color: var(--ink-2); line-height: 1.3; transition: background .15s, color .15s; }
   .seg button + button { border-left: 1px solid var(--ink); }
@@ -244,8 +252,7 @@
   .choice .dbtn { text-align: center; padding: 9px 4px; font-size: 13.5px; }
   .reset { border: 0; background: none; color: var(--ink-2); text-decoration: underline; text-underline-offset: 3px; font-size: 13.5px; padding: 8px 0 0; }
   .reset:hover { color: var(--ink); }
-  .note { margin-top: 14px; font-size: 14px; line-height: 1.45; color: var(--ink); background: var(--field); border-radius: 8px; padding: 10px 12px; min-height: 3em; }
-  .toast { margin-top: 8px; font-size: 13px; font-weight: 600; background: var(--ink); color: #fff; border-radius: 8px; padding: 8px 11px; opacity: 0; transform: translateY(-4px); transition: opacity .25s, transform .25s; }
+  .toast { margin-top: 10px; font-size: 13px; font-weight: 600; background: var(--ink); color: #fff; border-radius: 8px; padding: 8px 11px; opacity: 0; transform: translateY(-4px); transition: opacity .25s, transform .25s; }
   .toast:empty { display: none; }
   .toast.show { opacity: 1; transform: none; }
   .log { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--rule); }
@@ -255,19 +262,19 @@
   .log li span { color: var(--ink-3); }
   .log .empty { color: var(--ink-3); font-family: var(--sans); font-size: 13px; }
 
-  /* ================= Memo ================= */
-  .tabs { display: flex; gap: 28px; border-bottom: 1px solid var(--rule-2); }
-  .tabs button { border: 0; background: none; padding: 4px 0 12px; font-size: 16px; font-weight: 650; color: var(--ink-3); white-space: nowrap; box-shadow: inset 0 0 0 transparent; transition: color .15s, box-shadow .2s; margin-bottom: -1px; }
-  .tabs button:hover { color: var(--ink); }
-  .tabs button[aria-selected="true"] { color: var(--ink); box-shadow: inset 0 -3px 0 var(--ink); }
-  .tabs button:focus-visible { outline-offset: 4px; }
-  @media (max-width: 560px) {
-    .tabs { display: grid; grid-template-columns: repeat(3, auto); gap: 14px; justify-content: space-between; }
-    .tabs button { white-space: normal; font-size: 14.5px; text-align: left; line-height: 1.3; padding-bottom: 10px; }
-  }
-  .tabpanel { padding-top: 24px; }
-  .tabpanel[hidden] { display: none; }
-  .memo h2 { margin: 0 0 10px; font-family: var(--display); font-size: 21px; line-height: 1.3; font-weight: 700; letter-spacing: -.016em; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+  /* ================= Document: Design, Readout, Impact model ================= */
+  .doc { max-width: 900px; margin: 0 auto; padding: 0 24px 24px; }
+  .docnav { position: sticky; top: 0; z-index: 20; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; padding: 14px 0 12px; background: rgba(255, 255, 255, .95);
+    -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); border-bottom: 1px solid var(--rule-2); font-size: 15px; }
+  .docnav a { color: var(--ink-3); text-decoration: none; font-weight: 650; padding: 2px 0; transition: color .15s, box-shadow .15s; }
+  .docnav a:hover { color: var(--ink); }
+  .docnav a[aria-current="true"] { color: var(--ink); box-shadow: inset 0 -2px 0 var(--ink); }
+  .docnav span { color: var(--rule-2); }
+  .part { padding: 40px 0 16px; scroll-margin-top: 28px; }
+  .part + .part { border-top: 2px solid var(--ink); }
+  .part > h2 { margin: 0 0 22px; font-family: var(--display); font-size: 32px; line-height: 1.15; font-weight: 750; letter-spacing: -.024em; }
+  @media (max-width: 560px) { .doc { padding: 0 16px 24px; } .part > h2 { font-size: 27px; } }
+  .memo h3 { margin: 0 0 10px; font-family: var(--display); font-size: 21px; line-height: 1.3; font-weight: 700; letter-spacing: -.016em; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
   .memo p { margin: 0 0 10px; }
   .memo p:last-child { margin-bottom: 0; }
   .memo ul { margin: 6px 0 0; padding-left: 20px; }
@@ -377,7 +384,6 @@
 
   /* ---------- Impact model ---------- */
   .imp-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr); gap: 36px; align-items: start; }
-  @media (max-width: 1360px) and (min-width: 1280px) { .imp-grid { gap: 28px; } }
   @media (max-width: 760px) { .imp-grid { grid-template-columns: 1fr; gap: 28px; } }
   .imp-out { display: grid; gap: 28px; }
   .imp-top { margin-bottom: 24px; }
@@ -413,8 +419,8 @@
   details.formulas p { margin-top: 8px !important; line-height: 1.5; }
   details.formulas code { display: block; font: 12.5px/1.6 var(--mono); background: var(--field); border-radius: 6px; padding: 10px 12px; margin-top: 8px; color: var(--ink); white-space: pre-wrap; }
 
-  footer { max-width: 1440px; margin: 0 auto; padding: 18px 40px 36px; color: var(--ink-3); font-size: 13px; border-top: 1px solid var(--rule); }
-  @media (max-width: 700px) { footer { padding: 18px 16px 32px; } }
+  footer { max-width: 900px; margin: 0 auto; padding: 18px 24px 36px; color: var(--ink-3); font-size: 13px; border-top: 1px solid var(--rule); }
+  @media (max-width: 560px) { footer { padding: 18px 16px 32px; } }
 
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition-duration: .01ms !important; }
@@ -432,16 +438,20 @@
     </div>
     <nav class="posts" aria-label="How to use this page">
       <a class="post" href="#flow" data-go="flow"><b>1</b><span>Walk through the user flow</span></a>
-      <a class="post" href="#experiment" data-go="design"><b>2</b><span>Read the experiment design</span></a>
-      <a class="post" href="#experiment" data-go="impact"><b>3</b><span>Play with the impact model</span></a>
+      <a class="post" href="#design" data-go="design"><b>2</b><span>Read the experiment design</span></a>
+      <a class="post" href="#impact" data-go="impact"><b>3</b><span>Play with the impact model</span></a>
     </nav>
   </div>
 </header>
 
-<main class="page">
-  <!-- ================= LEFT: phone + demo controls ================= -->
-  <section class="stage" id="flow" aria-label="User flow prototype">
-    <svg class="contours" viewBox="0 0 640 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><path d="M549 230C550 234 549 239 547 243C545 246 540 249 536 252C532 255 527 257 522 259C518 261 513 262 508 263C503 263 497 263 492 262C487 261 482 261 477 259C472 258 466 256 463 253C459 250 456 246 455 242C454 238 456 234 456 230C457 226 458 223 459 219C460 215 461 211 464 208C467 204 471 201 476 199C481 197 486 196 492 196C497 195 503 195 508 196C513 197 519 199 523 201C527 203 529 207 532 210C535 213 538 216 541 219C544 222 548 226 549 230Z"/><path d="M600 230C601 238 598 248 593 255C589 262 579 268 570 274C562 279 554 284 545 287C536 291 525 294 515 295C505 296 495 295 485 294C475 293 464 292 454 289C444 286 431 283 424 277C417 271 413 262 411 254C409 246 413 238 414 230C415 222 416 215 418 208C420 200 422 191 427 185C433 178 443 172 452 168C461 165 473 162 484 161C494 160 506 159 516 161C526 163 537 168 544 173C552 178 557 185 563 191C570 196 577 201 583 208C589 214 598 222 600 230Z"/><path d="M652 230C654 242 647 257 639 267C631 278 617 287 605 295C593 303 581 311 567 316C554 321 538 325 523 327C508 328 493 326 477 325C462 324 445 324 430 320C414 316 395 310 385 301C375 292 371 277 369 265C367 253 373 241 374 230C375 219 373 208 375 196C378 185 381 171 390 161C398 152 414 144 428 138C442 132 459 128 475 126C491 125 510 124 524 127C539 131 554 139 565 147C577 154 583 164 594 172C604 180 618 186 628 196C637 205 650 218 652 230Z"/><path d="M706 230C708 246 695 265 684 279C672 294 654 305 638 316C622 327 607 337 589 344C571 351 550 355 530 357C510 360 491 358 470 357C449 356 425 358 404 352C384 347 359 338 346 325C334 313 331 292 329 276C327 260 333 245 333 230C334 215 328 200 331 185C334 169 339 151 351 138C363 125 385 115 404 107C423 99 446 94 467 91C488 89 513 89 532 94C552 99 569 112 585 122C600 132 609 143 624 153C639 163 661 170 675 183C689 196 705 214 706 230Z"/><path d="M760 230C760 250 741 273 727 291C712 309 691 323 671 336C652 350 634 364 611 372C589 381 563 385 538 388C513 391 488 390 462 390C435 390 403 393 378 386C352 380 322 366 308 349C294 332 295 306 292 286C290 266 294 249 293 230C292 211 281 191 285 172C288 153 297 130 313 114C328 98 356 86 380 76C404 67 432 58 459 56C485 54 516 55 540 62C564 69 583 87 603 98C622 110 636 121 656 133C676 145 708 153 725 169C743 185 760 210 760 230Z"/><path d="M814 230C812 255 786 281 768 302C749 323 727 341 705 357C682 373 660 390 633 400C606 410 575 413 545 417C515 421 486 424 454 424C421 425 380 431 350 422C320 413 287 393 272 372C256 350 261 319 258 295C255 272 255 253 251 230C248 207 233 182 236 159C240 136 254 109 274 90C294 71 327 57 356 46C385 34 418 23 450 21C482 18 519 22 547 32C576 41 596 63 620 77C644 90 663 99 690 112C716 125 758 135 779 155C800 175 815 205 814 230Z"/><path d="M865 230C860 259 828 288 807 313C786 337 763 358 738 378C712 397 685 416 654 427C623 439 587 441 552 447C517 452 483 459 445 461C407 463 356 470 322 458C287 447 254 418 238 393C222 367 231 331 226 304C220 277 214 256 207 230C200 204 181 173 186 146C191 118 211 88 236 66C260 44 297 28 332 15C366 1 405 -13 442 -15C479 -16 521 -8 554 4C586 16 608 41 636 55C665 70 693 76 726 90C759 104 812 116 835 140C859 163 870 201 865 230Z"/><path d="M914 230C906 263 869 295 845 323C821 351 800 376 771 398C743 420 710 440 675 453C639 466 599 469 559 476C519 484 480 497 436 500C391 503 331 509 293 495C255 480 224 442 208 411C191 381 203 342 195 312C187 282 169 260 159 230C149 200 128 163 135 132C141 101 169 67 198 43C227 18 268 -2 307 -17C346 -32 391 -48 433 -49C476 -50 523 -35 560 -21C596 -7 618 20 653 34C687 49 727 50 767 65C807 79 869 96 894 124C918 152 922 197 914 230Z"/><path d="M959 230C947 267 908 301 882 333C857 364 836 395 805 419C773 443 734 464 694 479C654 493 611 496 566 507C521 518 476 539 425 542C375 546 306 549 265 530C225 511 198 463 181 428C164 393 175 354 163 321C151 288 121 264 108 230C95 196 74 153 83 118C91 83 128 47 161 20C194 -8 238 -32 282 -49C326 -66 378 -83 426 -82C473 -81 524 -58 565 -42C606 -27 629 -1 670 12C711 26 765 21 812 37C859 53 928 76 953 108C977 140 971 193 959 230Z"/><path d="M164 760C163 764 161 767 158 770C156 774 153 776 150 779C147 781 143 784 139 785C136 787 131 788 127 788C122 789 118 789 113 789C109 789 103 789 99 788C95 786 90 783 88 780C85 777 85 773 84 770C83 766 83 763 83 760C82 757 81 753 82 750C83 746 85 743 88 740C91 737 95 735 99 733C104 732 108 730 113 730C117 729 123 730 127 731C131 732 135 734 138 736C142 738 145 740 149 742C152 744 157 746 160 749C162 752 164 756 164 760Z"/><path d="M207 760C206 767 200 774 196 781C191 787 186 793 180 798C174 803 167 807 159 811C151 814 142 815 133 816C124 818 116 819 106 819C97 819 86 819 77 816C69 812 61 806 57 800C52 794 51 786 49 779C47 773 45 767 44 760C43 753 41 746 43 739C45 732 50 725 56 720C62 714 71 710 79 707C87 703 97 700 106 699C115 699 125 700 134 702C142 705 149 710 156 713C164 717 171 719 178 723C186 727 196 732 201 738C205 744 207 753 207 760Z"/><path d="M248 760C247 771 239 781 232 791C226 800 219 809 210 817C201 824 190 831 178 835C166 840 153 842 140 844C127 847 113 850 99 850C85 849 68 849 56 844C44 839 33 828 27 819C20 810 19 798 15 789C12 779 7 770 5 760C3 750 -0 738 3 728C6 718 15 708 24 700C33 692 46 685 58 680C71 675 85 670 99 669C112 669 127 672 140 675C152 679 162 685 174 690C186 695 198 697 210 704C221 710 236 717 242 727C249 736 250 749 248 760Z"/><path d="M289 760C286 774 277 788 269 801C260 813 252 826 240 835C228 845 213 854 197 860C182 866 164 870 147 873C129 877 110 882 91 881C73 881 50 879 34 871C19 864 7 849 -2 837C-11 824 -13 811 -19 798C-25 785 -33 773 -36 760C-39 747 -42 731 -37 717C-32 704 -20 691 -7 680C5 669 21 660 38 653C54 646 74 641 92 640C110 639 129 645 146 649C163 653 176 661 192 666C208 672 227 675 243 683C258 691 277 702 284 715C292 728 291 746 289 760Z"/><path d="M328 760C324 778 314 795 305 810C295 826 285 842 270 854C255 867 235 876 216 885C196 893 176 898 154 903C132 908 107 915 84 914C60 913 32 909 13 899C-5 888 -18 869 -29 854C-40 839 -46 823 -54 807C-62 792 -75 777 -79 760C-83 743 -83 723 -77 706C-70 690 -54 674 -38 660C-23 647 -4 634 17 626C38 618 63 612 85 611C108 611 131 618 152 624C173 629 190 635 211 642C232 648 258 651 277 661C296 672 317 687 326 704C334 720 331 742 328 760Z"/></svg>
+<!-- ================= Demo stage: caption, phone, controls ================= -->
+<section class="stage" id="flow" aria-label="User flow prototype">
+  <div class="stage-in">
+    <div class="cap-col">
+      <div class="caption"><span class="kick" id="capGroup">Test group</span><p id="note" aria-live="polite"></p></div>
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    </div>
+
     <div class="phone">
       <div class="screen" id="screen">
         <div class="island"></div>
@@ -538,7 +548,7 @@
     </div>
 
     <aside class="demo" aria-label="Demo controls">
-      <h2>Demo controls</h2>
+      <p class="demo-lbl">Demo controls</p>
       <div class="seg" role="group" aria-label="Experiment group">
         <button id="gTest" aria-pressed="true">Test group</button>
         <button id="gCtrl" aria-pressed="false">Control group</button>
@@ -553,27 +563,25 @@
         <li><button class="dbtn" id="bWeek">3. Show week summary</button></li>
       </ol>
       <button class="reset" id="bReset">Reset</button>
-      <div class="note" id="note" aria-live="polite"></div>
-      <div class="toast" id="toast" role="status" aria-live="polite"></div>
       <div class="log" hidden>
         <h3>Logged events</h3>
         <ol id="log"><li class="empty">No events yet</li></ol>
       </div>
     </aside>
-  </section>
+  </div>
+</section>
 
-  <!-- ================= RIGHT: tabs ================= -->
-  <section class="memo" id="experiment" aria-label="Experiment">
-    <div class="tabs" role="tablist">
-      <button role="tab" id="tab-design" aria-controls="p-design" aria-selected="true">Experiment design</button>
-      <button role="tab" id="tab-readout" aria-controls="p-readout" aria-selected="false">Readout (simulated)</button>
-      <button role="tab" id="tab-impact" aria-controls="p-impact" aria-selected="false">Impact model</button>
-    </div>
+<!-- ================= Document: design, readout, impact model ================= -->
+<main class="doc memo" id="experiment">
+    <nav class="docnav" aria-label="Sections">
+      <a href="#design">Design</a><span aria-hidden="true">·</span><a href="#readout">Readout</a><span aria-hidden="true">·</span><a href="#impact">Impact model</a>
+    </nav>
 
-    <!-- ---------- Tab: Experiment design ---------- -->
-    <div class="tabpanel" id="p-design" role="tabpanel" aria-labelledby="tab-design">
+    <!-- ---------- Experiment design ---------- -->
+    <section class="part" id="design" aria-labelledby="h-design">
+      <h2 id="h-design">Experiment design</h2>
       <section class="sec">
-        <h2>Hypothesis</h2>
+        <h3>Hypothesis</h3>
         <p class="lead">If the app sends weight-loss users a push notification to walk as soon as glucose starts rising after a meal, more of them stay on-track with weight, and on-track users are more likely to still be with us in month 3.</p>
         <ol class="route" aria-label="Causal chain">
           <li>Push notification “walk now”</li>
@@ -648,49 +656,51 @@
           </dd>
         </div>
       </dl>
-    </div>
+    </section>
 
-    <!-- ---------- Tab: Readout ---------- -->
-    <div class="tabpanel" id="p-readout" role="tabpanel" aria-labelledby="tab-readout" hidden>
+    <!-- ---------- Readout ---------- -->
+    <section class="part" id="readout" aria-labelledby="h-readout">
+      <h2 id="h-readout">Readout (simulated)</h2>
       <div class="readout-head">
         <span class="simbadge"><span class="tag sim">Simulated</span>Simulated data – illustrates how results would be read</span>
         <div class="seg three" role="group" aria-label="Scenario" id="scenSeg"></div>
       </div>
       <section class="sec">
-        <h2>Test group funnel <span class="tag sim">Simulated</span></h2>
+        <h3>Test group funnel <span class="tag sim">Simulated</span></h3>
         <div class="funnel" id="funnel"></div>
         <p class="fine" id="funnelNote" style="margin-top:12px"></p>
       </section>
       <section class="sec">
-        <h2>Metrics at day 28 <span class="tag sim">Simulated</span></h2>
+        <h3>Metrics at day 28 <span class="tag sim">Simulated</span></h3>
         <div class="table-wrap"><table class="mt" id="mtable"></table></div>
         <p class="fine" id="chipNote" style="margin-top:10px"></p>
       </section>
       <section class="decision" id="decision"></section>
-    </div>
+    </section>
 
-    <!-- ---------- Tab: Impact model ---------- -->
-    <div class="tabpanel" id="p-impact" role="tabpanel" aria-labelledby="tab-impact" hidden>
+    <!-- ---------- Impact model ---------- -->
+    <section class="part" id="impact" aria-labelledby="h-impact">
+      <h2 id="h-impact">Impact model</h2>
       <section class="sec imp-top">
-        <h2>Control vs test <span class="tag as">Model</span></h2>
+        <h3>Control vs test <span class="tag as">Model</span></h3>
         <div class="table-wrap"><table class="mt" id="cmp"></table></div>
         <p class="fine" id="gainLine" style="margin-top:10px"></p>
       </section>
       <div class="imp-grid">
         <section>
-          <h2>Inputs <span class="tag as">All assumptions</span></h2>
+          <h3>Inputs <span class="tag as">All assumptions</span></h3>
           <div class="inputs-box" id="inputs"></div>
           <details class="formulas"><summary>How 31% is derived</summary><p id="convDer"></p></details>
           <p style="margin-top:12px"><button class="linkbtn" id="impReset">Reset to defaults</button></p>
         </section>
         <div class="imp-out">
           <section>
-            <h2>How users move to on-track <span class="tag as">Model</span></h2>
+            <h3>How users move to on-track <span class="tag as">Model</span></h3>
             <div class="wf" id="waterfall"></div>
             <p class="fine" id="chainLine" style="margin-top:12px"></p>
           </section>
           <section>
-            <h2>Sample size per group</h2>
+            <h3>Sample size per group</h3>
             <div class="kpis" id="kpis"></div>
             <p class="fine" id="nNote" style="margin-top:10px"></p>
             <details class="formulas">
@@ -706,8 +716,7 @@ n = 7.84 × (p1(1 − p1) + p2(1 − p2)) / (p2 − p1)²</code>
           </section>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 </main>
 
 <footer>Glow is a fictional brand. Numbers in the readout and impact model are simulated or assumptions unless a source is named.</footer>
@@ -933,7 +942,7 @@ function verdictFor(sc, R) {
   const tpl = (s, o) => s.replace(/\{(\w+)\}/g, (_, k) => o[k]);
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-  // Fill data-cfg placeholders in the design tab
+  // Fill data-cfg placeholders in the design section
   document.querySelectorAll('[data-cfg]').forEach(el => {
     const v = el.dataset.cfg.split('.').reduce((o, k) => (o == null ? o : o[k]), CONFIG);
     el.textContent = typeof v === 'number' ? v.toLocaleString('en-US') : v;
@@ -961,11 +970,13 @@ function verdictFor(sc, R) {
   S = freshState('test');
 
   const nudgeOn = () => S.group === 'test' && S.opted === true;
-  const lunchVal = t => (S.choice === 'walk' && nudgeOn() ? M.walk(t) : M.usual(t));
+  // Walking lowers the sugar spike for everyone; the push notification only changes how often users walk.
+  const walks = () => S.choice === 'walk';
+  const lunchVal = t => (walks() ? M.walk(t) : M.usual(t));
   const gridT = () => (S.lunch === 'none' ? 0 : Math.floor(S.simT / G.lunch.step + 1e-9) * G.lunch.step);
   const nowMin = () => G.lunch.at + (S.lunch === 'none' ? 0 : gridT());
   const valueAt = abs => (abs < G.lunch.at ? morningValue(abs, G) : lunchVal(abs - G.lunch.at));
-  const stepsNow = () => (S.choice === 'walk' && nudgeOn() ? Math.min(1, Math.max(0, (S.simT - M.tw) / G.steps.minutes)) * G.steps.total : 0);
+  const stepsNow = () => (walks() ? Math.min(1, Math.max(0, (S.simT - M.tw) / G.steps.minutes)) * G.steps.total : 0);
 
   function logEvent(name, props) {
     const p = props ? ' ' + Object.entries(props).map(([k, v]) => `${k}=${v}`).join(' ') : '';
@@ -1021,7 +1032,7 @@ function verdictFor(sc, R) {
     s += meal(G.breakfast.at, 'Breakfast');
     if (S.lunch !== 'none') s += meal(G.lunch.at, 'Lunch');
     // walk band
-    const walking = S.choice === 'walk' && nudgeOn();
+    const walking = walks();
     if (walking) {
       const x1 = X(G.lunch.at + M.tw), x2 = X(G.lunch.at + Math.min(M.tw + G.steps.minutes, gridT()));
       if (x2 > x1) s += `<rect x="${x1}" y="${B - 5}" width="${x2 - x1}" height="5" rx="2.5" fill="#1f7a4d"/><text x="${x1}" y="${B - 8}" font-size="8.5" fill="#17603c" font-weight="700">Walk</text>`;
@@ -1077,8 +1088,9 @@ function verdictFor(sc, R) {
   let cardsKey = '';
   function drawCards() {
     const steps = stepsNow();
-    const walking = S.choice === 'walk' && nudgeOn();
-    const showEnd = walking && S.lunch === 'done';
+    const walking = walks();
+    // Result and dip cards belong to the new feature: test group with alerts on only.
+    const showEnd = walking && nudgeOn() && S.lunch === 'done';
     const showDip = S.choice === 'ignore' && nudgeOn() && S.simT >= M.dipTime;
     const key = [S.group, S.introDone, S.opted, S.lunch, S.choice, Math.round(steps / 10), showEnd, showDip].join('|');
     if (key === cardsKey) return; cardsKey = key;
@@ -1146,11 +1158,13 @@ function verdictFor(sc, R) {
     if (S.lunch === 'paused') {
       const rise = `+${Math.round(M.triggerRise)} mg/dL in ${M.tw} min`;
       if (nudgeOn()) return `Trigger fired at ${hhmm(G.lunch.at + M.tw)} (${rise}). Push notification sent. Choose what the user does.`;
-      return `Trigger fired at ${hhmm(G.lunch.at + M.tw)} (${rise}). ${ctrl ? 'Control' : 'Not opted in'}: logged, not sent. Without a push notification the demo keeps the usual curve for both choices.`;
+      const walkC = CONFIG.impact.inputs.find(i => i.key === 'walkC').def;
+      return `Trigger fired at ${hhmm(G.lunch.at + M.tw)} (${rise}), logged only. ${ctrl ? 'Control' : 'Not opted in'}: no push notification. Some users still walk on their own (${walkC}% walk regularly). ${ctrl ? 'The test raises that share.' : 'The push notification would raise that share.'} Choose what the user does.`;
     }
     if (S.lunch === 'running') {
-      if (S.choice === 'walk' && nudgeOn()) return 'User walks. Steps come from Apple Health; the curve bends lower. Dashed grey = usual curve.';
-      if (!nudgeOn() && S.triggered) return `${S.group === 'control' ? 'Control' : 'Not opted in'}: no push notification, so the day goes on as usual: the sugar spike, then a dip below baseline.`;
+      if (walks() && nudgeOn()) return 'User walks. Steps come from Apple Health; the curve bends lower. Dashed grey = usual curve.';
+      if (walks()) return 'The user walked without a prompt. Walking cuts the sugar spike for everyone; the push notification only makes it happen more often.';
+      if (!nudgeOn() && S.triggered) return `${ctrl ? 'Control' : 'Not opted in'}: the user did not walk, so the day goes on as usual: the sugar spike, then a dip below baseline.`;
       return 'Usual post-meal curve: the sugar spike, then a dip below baseline.';
     }
     if (S.lunch === 'done') return 'Lunch done. Open the week summary.';
@@ -1181,7 +1195,14 @@ function verdictFor(sc, R) {
     $('gTest').setAttribute('aria-pressed', String(!ctrl));
     $('gCtrl').setAttribute('aria-pressed', String(ctrl));
     $('bIntro').title = ctrl ? 'Skipped in Control: control sees the standard app' : '';
-    $('note').textContent = noteText();
+    $('capGroup').textContent = ctrl ? 'Control group' : 'Test group';
+    const nt = noteText(), noteEl = $('note');
+    if (noteEl.textContent !== nt) {
+      noteEl.textContent = nt;
+      if (!matchMedia('(prefers-reduced-motion: reduce)').matches && noteEl.animate) {
+        noteEl.animate([{ opacity: 0.25, transform: 'translateY(3px)' }, { opacity: 1, transform: 'none' }], { duration: 260, easing: 'ease-out' });
+      }
+    }
   }
 
   function render() { drawChart(); drawReading(); drawCards(); drawDemo(); }
@@ -1217,11 +1238,10 @@ function verdictFor(sc, R) {
     S.triggered = true;
     const props = { group: S.group, rise: '+' + Math.round(M.triggerRise), sent: nudgeOn() };
     logEvent('spike_trigger', props);
-    if (nudgeOn()) { S.lunch = 'paused'; $('push').classList.add('show'); logEvent('push_sent'); return false; }
-    // No push notification: nothing to choose, the day goes on as usual
-    S.choice = 'ignore'; S.lunch = 'running'; S.lastTs = null;
-    toast(S.group === 'control' ? 'Control: sugar spike logged, no push notification' : 'Not opted in: sugar spike logged, no push notification');
-    return true;
+    // Pause in both groups: control users can still walk on their own.
+    S.lunch = 'paused';
+    if (nudgeOn()) { $('push').classList.add('show'); logEvent('push_sent'); }
+    else toast(S.group === 'control' ? 'Control: sugar spike logged, no push notification' : 'Not opted in: sugar spike logged, no push notification');
   }
   function choose(c) {
     if (S.lunch !== 'paused') return;
@@ -1231,7 +1251,7 @@ function verdictFor(sc, R) {
   }
   function onLunchDone() {
     S.lunch = 'done';
-    const walked = S.choice === 'walk' && nudgeOn();
+    const walked = walks();
     logEvent('meal_peak', { peak: Math.round(walked ? M.wPeak : M.uPeak), walked });
   }
   function tick(ts) {
@@ -1239,13 +1259,13 @@ function verdictFor(sc, R) {
     if (S.lastTs == null) S.lastTs = ts;
     const dt = Math.min(0.1, (ts - S.lastTs) / 1000); S.lastTs = ts;
     let t = S.simT + dt * G.lunch.duration / G.lunch.animSeconds;
-    if (!S.triggered && t >= M.tw) { S.simT = M.tw; const go = onTrigger(); render(); S.raf = go ? requestAnimationFrame(tick) : null; return; }
+    if (!S.triggered && t >= M.tw) { S.simT = M.tw; onTrigger(); render(); S.raf = null; return; }
     if (t >= G.lunch.duration) { S.simT = G.lunch.duration; onLunchDone(); render(); S.raf = null; return; }
     S.simT = t;
-    if (S.choice === 'walk' && nudgeOn() && !S.walkLogged && stepsNow() >= G.steps.walkedThreshold) {
+    if (walks() && !S.walkLogged && stepsNow() >= G.steps.walkedThreshold) {
       S.walkLogged = true; logEvent('walk_detected', { steps: G.steps.walkedThreshold + '+', within_min: 30 });
     }
-    if (S.triggered && !S.walkLogged && !S.noWalkLogged && !(S.choice === 'walk' && nudgeOn()) && t >= M.tw + 30) {
+    if (S.triggered && !S.walkLogged && !S.noWalkLogged && !walks() && t >= M.tw + 30) {
       S.noWalkLogged = true; logEvent('no_walk', { steps: 'under_' + G.steps.walkedThreshold });
     }
     render();
@@ -1276,35 +1296,30 @@ function verdictFor(sc, R) {
   $('permDeny').addEventListener('click', () => permission(false));
   $('weekBack').addEventListener('click', () => { showScreen('home'); render(); });
 
-  /* ---------------- Tabs ---------------- */
-  const tabs = ['design', 'readout', 'impact'];
-  function selectTab(name, focus) {
-    tabs.forEach(n => {
-      const on = n === name;
-      $('tab-' + n).setAttribute('aria-selected', String(on));
-      $('tab-' + n).tabIndex = on ? 0 : -1;
-      $('p-' + n).hidden = !on;
-    });
-    if (focus) $('tab-' + name).focus();
-  }
-  tabs.forEach((n, i) => {
-    $('tab-' + n).addEventListener('click', () => selectTab(n));
-    $('tab-' + n).addEventListener('keydown', e => {
-      if (e.key === 'ArrowRight') selectTab(tabs[(i + 1) % 3], true);
-      if (e.key === 'ArrowLeft') selectTab(tabs[(i + 2) % 3], true);
-    });
-  });
-  selectTab('design');
-
-  // Masthead signposts: 1 jumps to the phone, 2 and 3 open their tab.
+  /* ---------------- In-page navigation ---------------- */
+  const smooth = () => (matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth');
+  // Masthead signposts: 1 jumps to the demo stage, 2 and 3 to their sections.
   document.querySelectorAll('.post').forEach(a => a.addEventListener('click', e => {
     const go = a.dataset.go;
-    if (go === 'design' || go === 'impact') selectTab(go);
-    const target = go === 'flow' ? $('flow') : $('experiment');
     e.preventDefault();
-    target.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+    $(go).scrollIntoView({ behavior: smooth(), block: 'start' });
     if (go === 'flow') document.querySelector('.dbtn.next, #gTest').focus({ preventScroll: true });
   }));
+  const navLinks = [...document.querySelectorAll('.docnav a')];
+  navLinks.forEach(a => a.addEventListener('click', e => {
+    e.preventDefault();
+    document.querySelector(a.getAttribute('href')).scrollIntoView({ behavior: smooth(), block: 'start' });
+  }));
+  // Mark the section being read in the sticky nav.
+  function markNav() {
+    const parts = ['design', 'readout', 'impact'].map($);
+    let cur = null;
+    parts.forEach(p => { if (p.getBoundingClientRect().top <= 120) cur = p.id; });
+    navLinks.forEach(a => a.setAttribute('aria-current', String(a.getAttribute('href') === '#' + cur)));
+  }
+  addEventListener('scroll', markNav, { passive: true });
+  addEventListener('resize', markNav);
+  markNav();
 
   /* ---------------- Readout ---------------- */
   const RO = CONFIG.readout;
@@ -1348,7 +1363,7 @@ function verdictFor(sc, R) {
       (v === 'stop' && dRe < -RO.rule.guardPp ? ' – guardrail breached.' : v === 'iter' ? ' – walking is up, on-track is flat.' : '.');
     const el = $('decision');
     el.className = 'decision ' + v;
-    el.innerHTML = `<h2>Decision</h2><div class="dec-row"><span class="verdict v-${v}">${vName}</span><p class="dec-text">${esc(sc.decision)}</p></div><p class="fine">Rule applied: ${esc(why)}</p>`;
+    el.innerHTML = `<h3>Decision</h3><div class="dec-row"><span class="verdict v-${v}">${vName}</span><p class="dec-text">${esc(sc.decision)}</p></div><p class="fine">Rule applied: ${esc(why)}</p>`;
   }
   drawReadout();
 
