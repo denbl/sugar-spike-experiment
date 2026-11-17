@@ -678,7 +678,7 @@
       </section>
       <div class="imp-grid">
         <section>
-          <h2>Inputs</h2>
+          <h2>Inputs <span class="tag as">All assumptions</span></h2>
           <div class="inputs-box" id="inputs"></div>
           <details class="formulas"><summary>How 31% is derived</summary><p id="convDer"></p></details>
           <p style="margin-top:12px"><button class="linkbtn" id="impReset">Reset to defaults</button></p>
@@ -1357,7 +1357,7 @@ function verdictFor(sc, R) {
   const vals = {};
   IM.inputs.forEach(i => { vals[i.key] = i.def; });
   const isAs = n => /^Assumption/.test(n);
-  $('inputs').innerHTML = IM.inputs.map(i => `<div class="inp"><label for="in-${i.key}"${i.key === 'conv' ? ` title="${esc(IM.convDerivation)}"` : ''}>${esc(i.label)}<small><span class="tag ${isAs(i.note) ? 'as' : 'src-tag'}">${isAs(i.note) ? 'Assumption' : 'Source'}</span> ${esc(i.note.replace(/^Assumption:?\s*/, ''))}</small></label>
+  $('inputs').innerHTML = IM.inputs.map(i => `<div class="inp"><label for="in-${i.key}"${i.key === 'conv' ? ` title="${esc(IM.convDerivation)}"` : ''}>${esc(i.label)}${i.note.replace(/^Assumption:?\s*/, '') ? `<small>${esc(i.note.replace(/^Assumption:?\s*/, ''))}</small>` : ''}</label>
     <div class="numbox"><input type="number" id="in-${i.key}" inputmode="decimal" min="0" max="100" step="1" value="${i.def}"><span>%</span></div></div>`).join('');
   $('convDer').textContent = IM.convDerivation;
   IM.inputs.forEach(i => $('in-' + i.key).addEventListener('input', e => {
