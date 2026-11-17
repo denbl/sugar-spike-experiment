@@ -582,9 +582,9 @@ const CONFIG = {
     usual: { peakAt: 45, peak: 162, dipAt: 110, dipWidth: 25, dip: 76 },
     // Walk curve: after the trigger, walking scales the rise down with time constant tau (min);
     // the script solves the scale so the readings hit these targets.
-    walk: { peak: 138, dip: 88, tau: 8, extra: 2, decay: 28 },
+    walk: { peak: 138, dip: 88, tau: 8, extra: 0, decay: 18 },
     trigger: { rise: 30, windowMin: 30, maxPerDay: 2, hours: '07:00–22:00' },
-    steps: { total: 1150, minutes: 10, walkedThreshold: 500, slowdown: 6, slowWindow: 25 } // steps from Apple Health during the walk
+    steps: { total: 1150, minutes: 30, walkedThreshold: 500, slowdown: 1, slowWindow: 0 } // demo: steps build up while glucose falls // steps from Apple Health during the walk
   },
 
   // ---- Copy shown inside the phone ----
@@ -685,7 +685,7 @@ function buildLunchModel(G) {
   // Walk curve shown to the user: the rise stops within ~5 min of the walk, then glucose falls back; the dip stays shallow.
   const v0 = usual(tw), dipK = Math.max(0, (base - W.dip) / D);
   const walk = t => t <= tw ? usual(t)
-    : base + (v0 - base + W.extra * Math.min(1, (t - tw) / 5)) * Math.exp(-Math.max(0, t - tw - 5) / W.decay)
+    : base + (v0 - base) * Math.exp(-(t - tw) / W.decay)
       - D * dipK * gauss(t, U.dipAt, U.dipWidth);
 
   const [uPeak, uDip] = extremes(usual), [wPeak, wDip] = extremes(walk);
@@ -846,10 +846,10 @@ function impactModel(v) {
   }
 
   function drawReading() {
-    const now = nowMin(), v = valueAt(now), prev = valueAt(now - 15);
+    const now = nowMin(), v = valueAt(now), prev = valueAt(now - 5);
     const big = $('gVal'); big.textContent = Math.round(v);
     big.classList.toggle('high', v > C.high); big.classList.toggle('low', v < C.low);
-    const rate = (v - prev) / 15;
+    const rate = (v - prev) / 5;
     let ang = 0, label = 'Steady';
     if (rate > 2) { ang = -90; label = 'Rising fast'; } else if (rate > 1) { ang = -45; label = 'Rising'; }
     else if (rate < -2) { ang = 90; label = 'Falling fast'; } else if (rate < -1) { ang = 45; label = 'Falling'; }
