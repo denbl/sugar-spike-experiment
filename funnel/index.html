@@ -1,0 +1,1538 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Walk off the sugar spike · Glow experiment prototype</title>
+<style>
+/* ---------- Tokens ---------- */
+:root{
+  --bg:#F1F3EE;
+  --surface:#FFFFFF;
+  --surface-2:#F7F8F5;
+  --ink:#131C19;
+  --ink-2:#38443F;
+  --muted:#65716C;
+  --line:#DCE0DA;
+  --line-2:#E9ECE6;
+  --brand:#0E6B5C;
+  --brand-ink:#0A5145;
+  --brand-soft:#E0EEE9;
+  --spike:#BF641B;
+  --spike-soft:#FAECDC;
+  --control:#6C7773;
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --font-display:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --font-round:ui-rounded,"SF Pro Rounded",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+  --ease:cubic-bezier(.2,.7,.2,1);
+  --s:.8;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;scroll-padding-top:72px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+h1,h2,h3,p,ul,ol,dl,dd,figure{margin:0;padding:0}
+ul,ol{list-style:none}
+a{color:inherit}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px;border-radius:6px}
+
+/* ---------- Top bar ---------- */
+.topbar{position:sticky;top:0;z-index:20;height:56px;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:0 24px;background:rgba(241,243,238,.86);-webkit-backdrop-filter:saturate(1.4) blur(14px);backdrop-filter:saturate(1.4) blur(14px);border-bottom:1px solid var(--line-2)}
+.mark{display:flex;align-items:center;gap:10px;font-weight:600;letter-spacing:-.01em;text-decoration:none}
+.mark i{width:22px;height:22px;border-radius:7px;background:var(--brand);display:grid;place-items:center}
+.mark i::after{content:"";width:9px;height:9px;border-radius:50%;border:2px solid #fff}
+.mark span{color:var(--muted);font-weight:400}
+.topnav{display:flex;align-items:center;gap:4px;font-size:14px}
+.topnav a{padding:6px 10px;border-radius:8px;text-decoration:none;color:var(--ink-2)}
+.topnav a:hover{background:var(--line-2);color:var(--ink)}
+.topnav a.alt{color:var(--brand-ink);border:1px solid var(--line);margin-left:6px}
+
+/* ---------- Small parts ---------- */
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.tag{display:inline-flex;align-items:center;gap:6px;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:2px 8px;white-space:nowrap;font-weight:500;background:transparent}
+.tag.sim::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--spike)}
+.tag.asm::before{content:"";width:6px;height:6px;border-radius:2px;background:var(--brand)}
+.btn{appearance:none;border:1px solid var(--line);background:var(--surface);height:40px;padding:0 16px;border-radius:999px;font-size:14px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:8px;white-space:nowrap;transition:background .15s,border-color .15s,transform .1s}
+.btn:hover{border-color:#C3C9C1}
+.btn:active{transform:scale(.98)}
+.btn.primary{background:var(--ink);border-color:var(--ink);color:#fff}
+.btn.primary:hover{background:#000}
+.btn.quiet{border-color:transparent;background:transparent;color:var(--muted);padding:0 10px}
+.btn.quiet:hover{color:var(--ink);background:var(--line-2)}
+.btn[disabled]{opacity:.4;cursor:default}
+.seg{display:inline-flex;padding:2px;border-radius:9px;background:#E4E7E1;gap:2px}
+.seg button{appearance:none;border:0;background:transparent;font-size:12.5px;font-weight:500;color:var(--ink-2);padding:5px 10px;border-radius:7px;cursor:pointer;white-space:nowrap}
+.seg button[aria-pressed="true"]{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(19,28,25,.12)}
+.rng{-webkit-appearance:none;appearance:none;width:100%;height:20px;background:transparent;margin:0;cursor:pointer;--p:0%}
+.rng::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:linear-gradient(to right,var(--brand) var(--p),#D5DAD3 var(--p))}
+.rng::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:#fff;border:1.5px solid var(--brand);margin-top:-6px;box-shadow:0 1px 3px rgba(19,28,25,.2)}
+.rng::-moz-range-track{height:4px;border-radius:2px;background:#D5DAD3}
+.rng::-moz-range-progress{height:4px;border-radius:2px;background:var(--brand)}
+.rng::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:#fff;border:1.5px solid var(--brand)}
+
+/* ---------- Phone ---------- */
+.phone-wrap{position:relative;width:calc(412px*var(--s));height:calc(866px*var(--s));flex:none}
+.device{position:absolute;left:0;top:0;width:412px;height:866px;transform:scale(var(--s));transform-origin:0 0;border-radius:66px;background:#0C0E0D;padding:11px;box-shadow:inset 0 0 0 1.5px #3A3F3C,inset 0 0 0 4px #151817,0 40px 70px -30px rgba(19,28,25,.45),0 12px 24px -12px rgba(19,28,25,.25)}
+.screen{position:relative;width:390px;height:844px;border-radius:55px;overflow:hidden;background:#F2F2F7;color:#1C1C1E;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue","Segoe UI",Roboto,Arial,sans-serif;font-size:15px;line-height:1.35;isolation:isolate;-webkit-user-select:none;user-select:none}
+.statusbar{position:absolute;inset:0 0 auto 0;height:54px;z-index:9;display:flex;justify-content:space-between;align-items:center;padding:16px 30px 0 52px;font-weight:600;font-size:16.5px;letter-spacing:-.01em;pointer-events:none}
+.statusbar .island{position:absolute;left:50%;top:11px;width:124px;height:36px;margin-left:-62px;border-radius:20px;background:#000}
+.statusbar .sb-icons{display:flex;gap:6px;align-items:center}
+.statusbar svg{display:block}
+.home-ind{position:absolute;left:50%;bottom:8px;width:138px;height:5px;margin-left:-69px;border-radius:3px;background:#1C1C1E;z-index:9;opacity:.9;pointer-events:none}
+.view{position:absolute;inset:0;padding:58px 16px 96px;display:flex;flex-direction:column;gap:12px;transition:opacity .35s var(--ease),transform .45s var(--ease);background:#F2F2F7}
+.view[hidden]{display:flex;opacity:0;pointer-events:none;transform:translateX(24px)}
+.app-head{display:flex;justify-content:space-between;align-items:flex-end;padding:4px 4px 0}
+.app-date{font-size:13px;font-weight:600;color:#6E6E73;text-transform:uppercase;letter-spacing:.02em}
+.app-title{font-family:var(--font-display);font-size:34px;font-weight:700;line-height:40px;letter-spacing:.005em}
+.avatar{width:36px;height:36px;border-radius:50%;background:#D7E6E1;color:#0E6B5C;font-weight:600;font-size:14px;display:grid;place-items:center;margin-bottom:3px}
+.card{background:#fff;border-radius:20px;padding:15px 16px}
+.c-label{font-size:13px;font-weight:600;color:#6E6E73}
+.pill{font-size:12px;font-weight:600;padding:3px 9px;border-radius:999px;background:#E0EEE9;color:#0A5145}
+.pill.warn{background:#FAECDC;color:#9A4E12}
+.gl-top{display:flex;justify-content:space-between;align-items:center}
+.gl-main{display:flex;align-items:baseline;gap:8px;margin-top:2px}
+.gl-num{font-family:var(--font-round);font-size:62px;line-height:66px;font-weight:700;letter-spacing:-.02em;color:#1C1C1E;transition:color .3s}
+.gl-num.hi{color:#BF641B}
+.gl-unit{font-size:16px;color:#6E6E73;font-weight:500}
+.gl-arrow{margin-left:auto;align-self:center;width:40px;height:40px;border-radius:50%;background:#F2F2F7;display:grid;place-items:center;color:#1C1C1E}
+.gl-arrow svg{transition:transform .5s var(--ease)}
+.gl-note{font-size:12.5px;color:#6E6E73;display:flex;align-items:center;gap:6px}
+.gl-note::before{content:"";width:6px;height:6px;border-radius:50%;background:#1E9E7F}
+.ch-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.ch-head b{font-size:16px;font-weight:600}
+.ch-head span{font-size:12px;color:#6E6E73}
+.slot{display:grid;grid-template-columns:40px 1fr auto;gap:12px;align-items:center;min-height:96px;cursor:pointer;transition:background .2s;text-align:left;border:0;width:100%;font:inherit;color:inherit}
+.slot .ico{width:40px;height:40px;border-radius:12px;background:#E0EEE9;color:#0E6B5C;display:grid;place-items:center}
+.slot.amber .ico{background:#FAECDC;color:#BF641B}
+.slot b{display:block;font-size:16px;font-weight:600;letter-spacing:-.01em}
+.slot p{font-size:13.5px;color:#55555A;line-height:1.3;margin-top:2px}
+.slot .chev{color:#C4C4C7}
+.slot .big{font-family:var(--font-round);font-size:22px;font-weight:700;text-align:right;line-height:1}
+.slot .big small{display:block;font-family:inherit;font-size:11px;font-weight:500;color:#6E6E73;margin-top:3px}
+.slot .bar{grid-column:1/-1;height:4px;border-radius:2px;background:#E5E5EA;overflow:hidden;margin-top:-2px}
+.slot .bar i{display:block;height:100%;background:#0E6B5C;border-radius:2px}
+.cart{display:grid;grid-template-columns:1fr auto;gap:6px 12px;align-items:center}
+.cart b{font-size:15px;font-weight:600}
+.cart span{font-size:13px;color:#6E6E73}
+.cart .segs{grid-column:1/-1;display:grid;grid-template-columns:repeat(14,1fr);gap:3px}
+.cart .segs i{height:5px;border-radius:3px;background:#E5E5EA}
+.cart .segs i.on{background:#0E6B5C}
+.tabbar{position:absolute;left:0;right:0;bottom:0;height:84px;z-index:5;display:grid;grid-template-columns:repeat(4,1fr);padding:8px 12px 0;background:rgba(249,249,249,.92);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);border-top:.5px solid rgba(60,60,67,.2)}
+.tabbar div{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;font-weight:500;color:#8E8E93}
+.tabbar div.on{color:#0E6B5C}
+.sim-note{font-size:11px;color:#8A8A8E;text-align:center;margin-top:auto}
+
+/* sheet, alert, banner */
+.sheet{position:absolute;inset:0;z-index:6;background:#fff;padding:58px 22px 30px;display:flex;flex-direction:column;transform:translateY(102%);transition:transform .5s var(--ease);border-radius:55px}
+.sheet.open{transform:none}
+.sheet-x{align-self:flex-end;width:30px;height:30px;border-radius:50%;border:0;background:#EEEEF0;color:#6E6E73;display:grid;place-items:center;cursor:pointer;margin-top:2px}
+.sheet .eb{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#0E6B5C;margin-top:2px}
+.sheet h3{font-family:var(--font-display);font-size:29px;line-height:33px;font-weight:700;letter-spacing:-.01em;margin:4px 0 10px}
+.sheet .lead{font-size:15px;color:#3C3C43;line-height:1.35}
+.sheet .cta{margin-top:auto;height:54px;border-radius:15px;border:0;background:#0E6B5C;color:#fff;font-size:17px;font-weight:600;cursor:pointer}
+.sheet .later{height:40px;border:0;background:transparent;color:#0E6B5C;font-size:16px;cursor:pointer;margin-top:2px}
+.facts{display:grid;gap:9px;margin-top:12px}
+.facts li{display:grid;grid-template-columns:104px 1fr;gap:12px;align-items:baseline;font-size:14px;line-height:1.3;color:#3C3C43}
+.facts b{font-family:var(--font-round);font-size:18px;font-weight:700;color:#1C1C1E;letter-spacing:-.01em}
+.promise{display:flex;gap:10px;align-items:center;margin-top:12px;padding:10px 12px;border-radius:14px;background:#F2F2F7;font-size:13.5px;color:#3C3C43;line-height:1.3}
+.promise svg{flex:none;color:#0E6B5C}
+.dia{background:#F5F7F6;border-radius:18px;padding:10px 12px 12px;margin-top:12px}
+.chain{display:flex;align-items:center;justify-content:space-between;gap:2px;font-size:12.5px;font-weight:600;color:#1C1C1E;margin-top:4px}
+.chain span{display:inline-flex;align-items:center;gap:5px}
+.chain i{font-style:normal;width:17px;height:17px;border-radius:50%;background:#1C1C1E;color:#fff;font-size:10.5px;display:grid;place-items:center}
+.chain em{font-style:normal;color:#AEAEB2}
+.scrim{position:absolute;inset:0;z-index:7;background:rgba(0,0,0,.28);display:grid;place-items:center;opacity:0;pointer-events:none;transition:opacity .25s}
+.scrim.open{opacity:1;pointer-events:auto}
+.ios-alert{width:272px;border-radius:14px;background:rgba(245,245,245,.96);-webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px);text-align:center;transform:scale(1.12);transition:transform .3s var(--ease);overflow:hidden}
+.scrim.open .ios-alert{transform:none}
+.ios-alert .tx{padding:19px 16px 17px}
+.ios-alert b{display:block;font-size:17px;line-height:22px;font-weight:600;letter-spacing:-.02em}
+.ios-alert p{font-size:13px;line-height:17px;margin-top:3px;color:#1C1C1E}
+.ios-alert .bt{display:grid;grid-template-columns:1fr 1fr;border-top:.5px solid rgba(60,60,67,.3)}
+.ios-alert button{height:44px;border:0;background:transparent;color:#007AFF;font-size:17px;cursor:pointer}
+.ios-alert button + button{border-left:.5px solid rgba(60,60,67,.3);font-weight:600}
+.banner{position:absolute;left:9px;right:9px;top:50px;z-index:8;border-radius:24px;padding:13px 14px 14px;background:rgba(250,250,250,.86);-webkit-backdrop-filter:blur(30px) saturate(1.6);backdrop-filter:blur(30px) saturate(1.6);box-shadow:0 10px 34px rgba(0,0,0,.18),0 0 0 .5px rgba(0,0,0,.06);display:grid;grid-template-columns:38px 1fr;gap:10px;transform:translateY(-190px);transition:transform .55s var(--ease)}
+.banner.show{transform:none}
+.banner .app-ico{width:38px;height:38px;border-radius:9px;background:#0E6B5C;display:grid;place-items:center;align-self:center}
+.banner .app-ico::after{content:"";width:15px;height:15px;border-radius:50%;border:3px solid #fff}
+.banner .hd{display:flex;justify-content:space-between;font-size:13px;color:#6E6E73}
+.banner .hd b{color:#1C1C1E;font-weight:600;font-size:15px}
+.banner p{font-size:15px;line-height:19px;color:#1C1C1E;letter-spacing:-.01em}
+
+/* ---------- Charts ---------- */
+.ch-band{fill:rgba(14,107,92,.09)}
+.ch-edge{stroke:rgba(14,107,92,.35);stroke-width:1;stroke-dasharray:2 3}
+.ch-tick{font-size:10.5px;fill:#8A8A8E;font-family:inherit}
+.ch-tick.b{fill:rgba(14,107,92,.8)}
+.ch-line{fill:none;stroke:#0E6B5C;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.ch-line.hi{stroke:#D0782B}
+.ch-line.ctl{stroke:#6C7773;stroke-width:2;stroke-dasharray:1 4.5}
+.ch-line.ghost{stroke:#B4BAB6;stroke-width:2;stroke-dasharray:1 4.5}
+.ch-dot{fill:#0E6B5C;stroke:#fff;stroke-width:2}
+.ch-dot.hi{fill:#D0782B}
+.ch-dot.ctl{fill:#6C7773}
+.ch-halo{fill:rgba(14,107,92,.16)}
+.ch-halo.hi{fill:rgba(208,120,43,.18)}
+.ch-v{stroke:#131C19;stroke-width:1;stroke-dasharray:2 3;opacity:.55}
+.ch-note{font-size:10.5px;fill:#38443F;font-weight:600;font-family:inherit}
+.ch-val{font-size:11px;font-weight:700;fill:#131C19;font-family:inherit;paint-order:stroke;stroke:#fff;stroke-width:3px;stroke-linejoin:round}
+.ch-walk{fill:rgba(14,107,92,.75)}
+.ch-num{fill:#1C1C1E}
+.ch-numt{fill:#fff;font-size:10px;font-weight:700;font-family:inherit}
+
+/* ---------- Sections ---------- */
+.band{border-top:1px solid var(--line);padding:72px 24px 80px}
+.band.alt{background:var(--surface-2)}
+.wrap{max-width:1120px;margin:0 auto}
+.sec-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:40px;align-items:end;margin-bottom:40px}
+.sec-head h2{font-family:var(--font-display);font-size:36px;line-height:1.1;letter-spacing:-.025em;font-weight:600;margin-top:10px}
+.sec-head p{color:var(--ink-2);font-size:17px;line-height:1.5;max-width:56ch}
+.panel{background:var(--surface);border:1px solid var(--line-2);border-radius:18px;padding:24px}
+.panel h3{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:500;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+footer.foot{border-top:1px solid var(--line);padding:28px 24px 44px;color:var(--muted);font-size:13px}
+footer.foot .wrap{display:flex;flex-wrap:wrap;gap:8px 24px;justify-content:space-between}
+
+@media (max-width:820px){
+  .topbar{padding:0 16px}
+  .topnav a:not(.alt){display:none}
+  .mark span{display:none}
+  .band{padding:48px 16px 56px}
+  .sec-head{grid-template-columns:1fr;gap:12px;margin-bottom:28px}
+  .sec-head h2{font-size:28px}
+  .sec-head p{font-size:16px}
+  .panel{padding:18px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition-duration:.01ms !important;animation-duration:.01ms !important}
+  html{scroll-behavior:auto}
+}
+
+/* ---------- Stage: story, test phone, experiment view, control phone ---------- */
+.stage{max-width:1440px;margin:0 auto;padding:26px 24px 40px;display:grid;grid-template-columns:minmax(260px,340px) auto;justify-content:center;gap:64px;align-items:start;position:relative}
+.duo{display:flex;flex-direction:column;align-items:center;gap:16px;min-width:0}
+.phones{display:flex;gap:32px;justify-content:center}
+.act{display:flex;align-items:center;gap:12px}
+.btn.big{height:56px;min-width:300px;padding:0 32px;justify-content:center;font-size:16.5px;font-weight:600;letter-spacing:-.01em;background:var(--brand);border-color:var(--brand);box-shadow:0 10px 24px -12px rgba(0,0,0,.35)}
+.btn.big:hover{filter:brightness(.94);background:var(--brand)}
+.btn.big.playing{background:var(--ink);border-color:var(--ink);box-shadow:none}
+.btn.round{width:44px;height:44px;padding:0;justify-content:center;font-size:16px}
+.act-note{font-size:12px;color:var(--muted);margin-top:-6px}
+.intro{display:flex;flex-direction:column;gap:14px;min-width:0;padding-top:6px}
+.intro h1{font-family:var(--font-display);font-size:clamp(32px,3vw,44px);line-height:1.04;letter-spacing:-.032em;font-weight:600;margin-top:-6px;text-wrap:balance}
+.intro .idea{font-size:15px;line-height:1.5;color:var(--ink-2)}
+.expect{border:1px solid var(--line);border-radius:14px;background:var(--surface);overflow:hidden}
+.expect .row{display:grid;grid-template-columns:1fr 1fr}
+.expect .cell{padding:9px 12px 8px}
+.expect .cell + .cell{border-left:1px solid var(--line-2)}
+.expect .cell span{font-size:11.5px;color:var(--muted);display:block;line-height:1.3}
+.expect .cell b{font-size:15.5px;font-weight:600;letter-spacing:-.015em;white-space:nowrap}
+.expect .cell b i{font-style:normal;color:var(--muted);font-weight:400;padding:0 2px}
+.expect .cap{display:flex;justify-content:space-between;align-items:center;gap:8px;border-top:1px solid var(--line-2);padding:6px 12px;font-size:11.5px;color:var(--muted);text-decoration:none}
+.expect a.cap:hover{color:var(--ink)}
+.steps{border-top:1px solid var(--line)}
+.steps li{border-bottom:1px solid var(--line)}
+.steps button{appearance:none;border:0;background:transparent;width:100%;text-align:left;cursor:pointer;display:grid;grid-template-columns:20px 1fr auto;gap:0 8px;align-items:baseline;padding:8px 0}
+.steps .n{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.steps .nm{font-size:15px;font-weight:500;color:var(--ink-2)}
+.steps .wh{font-size:12px;color:var(--muted)}
+.steps .cap{grid-column:2/4;font-size:13.5px;line-height:1.45;color:var(--ink-2);display:none;padding:4px 0 2px}
+.steps .cap q{display:block;margin-top:8px;padding:8px 10px;border-radius:10px;background:var(--brand-soft);color:var(--brand-ink);quotes:none;font-size:13px}
+.steps li.on .cap{display:block}
+.steps li.on .nm{color:var(--ink);font-weight:600}
+.steps li.on .n{color:var(--brand)}
+.steps li.done .n{color:var(--brand)}
+.ctl{display:flex;gap:6px;align-items:center}
+.ctl .btn{font-size:13.5px;padding:0 14px}
+.ctl .btn.quiet{padding:0 8px}
+.ctl .btn.primary{flex:1;justify-content:center;min-width:0;padding:0 10px}
+
+.pcol{display:flex;flex-direction:column;gap:12px}
+.pcol-head{height:40px;display:flex;justify-content:space-between;align-items:center;gap:8px;width:calc(412px*var(--s))}
+.who{display:flex;flex-direction:column;line-height:1.25;min-width:0}
+.who b{font-size:14px;font-weight:600;display:flex;align-items:center;gap:7px;white-space:nowrap}
+.who b i{width:8px;height:8px;border-radius:50%;background:var(--brand)}
+.pcol.control .who b i{background:transparent;border:2px dotted var(--control);width:9px;height:9px}
+.who span{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pcol .seg{transition:opacity .2s}
+.stage[data-pre="1"] .pcol .seg{opacity:.45}
+.pcol-note{font-size:12px;color:var(--muted);line-height:1.4;width:calc(412px*var(--s))}
+.viewsw{display:none}
+
+.spine{background:var(--surface);border:1px solid var(--line-2);border-radius:20px;padding:14px 16px 6px;min-width:0}
+.sp-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.sp-head b{display:block;font-size:14px;font-weight:600}
+.sp-head span.sub{font-size:12px;color:var(--muted);line-height:1.3;display:block}
+.sp-legend{display:flex;gap:14px;font-size:11.5px;color:var(--ink-2);margin:10px 0 2px}
+.sp-legend span{display:inline-flex;align-items:center;gap:6px}
+.sp-legend i{width:18px;height:0;border-top:2.5px solid var(--brand)}
+.sp-legend .c i{border-top:2px dotted var(--control)}
+.sp-scrub{display:grid;grid-template-columns:30px 1fr 42px;gap:10px;align-items:center;margin:6px 0 10px}
+.sp-scrub .pp{appearance:none;width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;cursor:pointer;color:var(--ink)}
+.sp-scrub .pp:hover{border-color:#C3C9C1}
+.sp-scrub output{font-size:13px;font-weight:600;text-align:right}
+.lg-cols{display:flex;justify-content:space-between;font-size:11px;letter-spacing:.06em;text-transform:uppercase;font-weight:600;padding:8px 0 6px;border-top:1px solid var(--line)}
+.lg-cols .t{color:var(--brand-ink)}
+.lg-cols .c{color:var(--control)}
+.ledger li{padding:7px 0 8px;border-top:1px solid var(--line-2);transition:opacity .3s}
+.ledger li.off{opacity:.32}
+.ledger .lb{font-size:11.5px;color:var(--muted);text-align:center;line-height:1.3}
+.ledger .vals{display:grid;grid-template-columns:auto auto;justify-content:space-between;gap:12px;font-size:13px;line-height:1.3;margin-top:2px;min-height:17px}
+.ledger .vals span:first-child{color:var(--brand-ink);font-weight:600}
+.ledger .vals span:last-child{text-align:right;color:var(--ink-2)}
+.ledger li.off .vals{visibility:hidden}
+.ledger li.warn .vals span:first-child{color:var(--spike)}
+.nowbar{display:none}
+
+/* ---------- Experiment design ---------- */
+.hyp{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:40px;align-items:start}
+.hyp .say{font-family:var(--font-display);font-size:23px;line-height:1.36;letter-spacing:-.015em;font-weight:500}
+.hyp .say em{font-style:normal;color:var(--brand-ink)}
+.evid li{display:grid;grid-template-columns:124px 1fr;gap:16px;padding:11px 0;border-top:1px solid var(--line);align-items:baseline}
+.evid li:last-child{border-bottom:1px solid var(--line)}
+.evid b{font-size:19px;font-weight:600;letter-spacing:-.02em;color:var(--brand-ink);white-space:nowrap}
+.evid p{font-size:14.5px;color:var(--ink-2);line-height:1.45}
+.evid a{color:var(--muted);font-size:13px;white-space:nowrap}
+.tl{display:grid;grid-template-columns:1.25fr 1.25fr 2fr 1.1fr;margin:44px 0 36px;position:relative}
+.tl::before{content:"";position:absolute;left:0;right:0;top:5px;height:1px;background:var(--line)}
+.tl li{position:relative;padding:22px 16px 0 0;min-width:0}
+.tl li::before{content:"";position:absolute;left:0;top:0;width:11px;height:11px;border-radius:50%;background:var(--bg);border:2px solid var(--ink)}
+.tl li.key::before{background:var(--brand);border-color:var(--brand)}
+.tl b{display:block;font-size:14px;font-weight:600}
+.tl span{font-size:13.5px;color:var(--ink-2);line-height:1.4;display:block;max-width:30ch}
+.tl li:last-child{padding-right:0}
+.tl li:last-child span{max-width:none}
+.g3{display:grid;grid-template-columns:1fr 1fr 1.25fr;gap:16px}
+.spec div{display:grid;grid-template-columns:96px 1fr;gap:12px;padding:9px 0;border-top:1px solid var(--line-2);font-size:14.5px;line-height:1.4}
+.spec div:first-child{border-top:0;padding-top:0}
+.spec dt{color:var(--muted);font-size:13px}
+.metrics li{display:grid;grid-template-columns:96px 1fr;gap:12px;padding:9px 0;border-top:1px solid var(--line-2);font-size:14.5px;line-height:1.4;align-items:baseline}
+.metrics li:first-child{border-top:0;padding-top:0}
+.metrics .role{font-size:13px;color:var(--muted)}
+.metrics li.key .role{color:var(--brand-ink);font-weight:600}
+.metrics li.guard .role{color:var(--spike);font-weight:600}
+.rules{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:16px}
+.rules-h{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin:36px 0 0;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.rule{border-radius:18px;padding:20px 22px 22px;background:var(--surface);border:1px solid var(--line-2)}
+.rule b{font-family:var(--font-display);font-size:22px;font-weight:600;letter-spacing:-.02em;display:flex;align-items:center;gap:9px}
+.rule b::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--brand)}
+.rule.iterate b::before{background:#C9A227}
+.rule.stop b::before{background:var(--spike)}
+.rule p{font-size:14.5px;line-height:1.45;color:var(--ink-2);margin-top:8px}
+.rule p span{color:var(--muted);font-size:12px;letter-spacing:.05em;text-transform:uppercase;display:block;margin-bottom:1px}
+
+/* ---------- Impact model ---------- */
+.model{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:16px;align-items:start}
+.inp{display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding:11px 0 9px;border-top:1px solid var(--line-2);align-items:center}
+.inp:first-of-type{border-top:0;padding-top:0}
+.inp label{font-size:14.5px;line-height:1.3}
+.inp .num{display:inline-flex;align-items:center;gap:1px;border:1px solid var(--line);border-radius:8px;padding:2px 8px 2px 4px;background:var(--surface-2);font-weight:600;font-size:14.5px}
+.inp .num input{width:34px;border:0;background:transparent;font:inherit;color:inherit;text-align:right;padding:2px 0;-moz-appearance:textfield;appearance:textfield;font-variant-numeric:tabular-nums}
+.inp .num input::-webkit-outer-spin-button,.inp .num input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.inp .num input:focus{outline:none}
+.inp .num:focus-within{border-color:var(--brand)}
+.inp .rng{grid-column:1/-1}
+.inp small{grid-column:1/-1;font-size:12.5px;color:var(--muted);line-height:1.35}
+.res{display:grid;gap:16px;grid-template-rows:auto 1fr;align-self:stretch}
+.res > .panel{display:flex;flex-direction:column}
+.res > .panel .verdict{margin-top:auto}
+.casc{margin-bottom:12px}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.cmp .panel{padding:20px 22px}
+.cmp .lab{font-size:13px;color:var(--muted);line-height:1.3}
+.cmp .big{font-family:var(--font-display);font-size:32px;line-height:1.15;font-weight:600;letter-spacing:-.03em;margin-top:6px;white-space:nowrap}
+.cmp .big i{font-style:normal;color:var(--muted);font-weight:400;font-size:22px;padding:0 4px;vertical-align:3px}
+.cmp .big .from{color:var(--ink-2);font-weight:500}
+.cmp .dl{font-size:13.5px;color:var(--brand-ink);font-weight:600;margin-top:2px}
+.cmp .bars{display:grid;gap:4px;margin-top:14px}
+.cmp .bars div{height:6px;border-radius:3px;background:var(--line-2);overflow:hidden}
+.cmp .bars i{display:block;height:100%;border-radius:3px;background:var(--control);transition:width .25s var(--ease)}
+.cmp .bars div + div i{background:var(--brand)}
+.cmp .n{font-size:13.5px;color:var(--ink-2);margin-top:14px;padding-top:12px;border-top:1px solid var(--line-2);line-height:1.4}
+.cmp .n b{font-size:17px;font-weight:600;color:var(--ink);letter-spacing:-.01em}
+.casc li{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) 44px;gap:12px;align-items:center;padding:7px 0;font-size:14px;line-height:1.3}
+.casc .tr{height:8px;border-radius:4px;background:var(--line-2);overflow:hidden}
+.casc .tr i{display:block;height:100%;background:var(--brand);border-radius:4px;transition:width .25s var(--ease);min-width:2px}
+.casc li:first-child .tr i{background:var(--control)}
+.casc b{text-align:right;font-weight:600}
+.casc .op{color:var(--muted);font-size:12.5px;display:block}
+.verdict{display:flex;gap:10px;align-items:baseline;font-size:14px;color:var(--ink-2);margin-top:12px;padding-top:12px;border-top:1px solid var(--line-2);line-height:1.4}
+.verdict::before{content:"";flex:none;width:8px;height:8px;border-radius:50%;background:var(--brand);transform:translateY(-1px)}
+.verdict.no::before{background:var(--spike)}
+.fx{margin-top:16px}
+.fx ol{display:grid;gap:0}
+.fx li{display:grid;grid-template-columns:220px 1fr;gap:16px;padding:9px 0;border-top:1px solid var(--line-2);font-size:13.5px;align-items:baseline}
+.fx li:first-child{border-top:0;padding-top:0}
+.fx li span{color:var(--ink-2)}
+.fx code{font-family:var(--mono);font-size:12.5px;color:var(--ink);line-height:1.6}
+.fx code b{color:var(--brand-ink);font-weight:600}
+.model-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:14px}
+.model-foot span{font-size:12.5px;color:var(--muted)}
+
+/* ---------- Week screen ---------- */
+.wk-big{font-family:var(--font-round);font-size:36px;line-height:1.1;font-weight:700;letter-spacing:-.02em;margin-top:4px}
+.wk-big small{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;font-size:15px;font-weight:500;color:#6E6E73;letter-spacing:0}
+.wk-dots{display:flex;gap:7px;margin-top:10px}
+.wk-dots i{width:22px;height:22px;border-radius:50%;border:2px solid #D1D1D6}
+.wk-dots i.on{background:#0E6B5C;border-color:#0E6B5C;position:relative}
+.wk-dots i.on::after{content:"";position:absolute;left:6px;top:3px;width:5px;height:9px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(42deg)}
+.wk-bar{display:grid;grid-template-columns:86px 1fr 92px;gap:10px;align-items:center;font-size:14px;margin-top:10px}
+.wk-bar span{color:#3C3C43}
+.wk-bar .tr{height:8px;border-radius:4px;background:#EEEEF0;overflow:hidden}
+.wk-bar .tr i{display:block;height:100%;border-radius:4px;background:#0E6B5C}
+.wk-bar.other .tr i{background:#D0782B}
+.wk-bar b{font-weight:600;text-align:right;white-space:nowrap}
+.wk-sub{font-size:13px;color:#6E6E73;margin-top:8px;line-height:1.3}
+
+/* ---------- Responsive ---------- */
+@media (min-width:1101px) and (max-height:850px){
+  .intro{gap:11px}
+  .intro h1{font-size:36px}
+  .intro .idea{font-size:14.5px}
+  .steps button{padding:6px 0}
+  .steps .cap{font-size:13px}
+}
+@media (max-width:1100px){
+  .stage{grid-template-columns:1fr;gap:24px;padding:22px 16px 0;justify-items:center}
+  .intro{grid-column:1/-1;justify-self:stretch;max-width:680px}
+  .steps{display:none}
+  .phones{gap:20px}
+  .act{position:sticky;bottom:0;z-index:15;align-self:stretch;justify-content:center;margin:0 -16px;padding:10px 16px calc(10px + env(safe-area-inset-bottom));background:rgba(255,255,255,.92);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-top:1px solid var(--line)}
+  .act .btn.big{flex:1;min-width:0;max-width:440px;height:50px}
+  .act-note{margin:0}
+  .duo{justify-self:stretch;width:100%}
+  .spine{grid-column:1/-1;order:5;justify-self:stretch}
+  .nowbar{grid-column:1/-1;order:6;justify-self:stretch;display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;position:sticky;bottom:0;z-index:15;margin:0 -16px;padding:10px 16px calc(10px + env(safe-area-inset-bottom));background:rgba(255,255,255,.92);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-top:1px solid var(--line)}
+  .nowbar b{font-size:13.5px;font-weight:600;display:block}
+  .nowbar b span{color:var(--muted);font-weight:500;font-family:var(--mono);font-size:11.5px;margin-right:6px}
+  .nowbar p{font-size:12.5px;line-height:1.35;color:var(--ink-2)}
+  .nowbar .bt{display:flex;gap:6px}
+  .nowbar .btn{height:38px;padding:0 14px}
+  .g3{grid-template-columns:1fr 1fr}
+  .g3 .panel:last-child{grid-column:1/-1}
+}
+@media (max-width:700px){
+  .stage{grid-template-columns:1fr}
+  .intro h1{font-size:34px}
+  .viewsw{display:flex;justify-content:center;grid-column:1/-1}
+  .viewsw .seg button{padding:7px 18px;font-size:13.5px}
+  .stage[data-view="test"] .pcol.control,.stage[data-view="control"] .pcol.test{display:none}
+  .who b{display:none}
+  .who span{font-size:13px;color:var(--ink-2)}
+  .hyp,.model,.cmp,.rules,.g3{grid-template-columns:1fr}
+  .hyp{gap:24px}
+  .hyp .say{font-size:20px}
+  .evid li{grid-template-columns:1fr;gap:2px}
+  .tl{grid-template-columns:1fr;margin:32px 0 28px;gap:0}
+  .tl::before{left:5px;right:auto;top:6px;bottom:6px;width:1px;height:auto}
+  .tl li{padding:0 0 18px 28px}
+  .tl li::before{top:4px}
+  .tl span{max-width:none}
+  .fx li{grid-template-columns:1fr;gap:2px}
+  .casc li{grid-template-columns:1fr 70px 40px;gap:8px}
+  .model-foot{flex-direction:column;align-items:flex-start}
+}
+
+/* ---------- LTV, money inputs, collapsible formulas ---------- */
+.expect .row.one{grid-template-columns:1fr;border-top:1px solid var(--line-2)}
+.expect .row.one b em{font-style:normal}
+.expect .row.one b small{font-size:12px;color:var(--muted);font-weight:400;letter-spacing:0}
+.cmp .money{grid-column:1/-1}
+.cmp .money .big{color:var(--brand-ink)}
+.inp-group{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500;margin:18px 0 6px;padding-top:14px;border-top:1px solid var(--line)}
+.inp-group + .inp{border-top:0;padding-top:0}
+.inp .num input{width:38px}
+details.fx summary{list-style:none;cursor:pointer}
+details.fx summary::-webkit-details-marker{display:none}
+details.fx summary h3{margin:0}
+details.fx summary h3 > span:first-child::after{content:'Show';margin-left:12px;font-size:11px;letter-spacing:.06em;color:var(--brand-ink);border:1px solid var(--line);border-radius:999px;padding:3px 9px}
+details.fx[open] summary h3 > span:first-child::after{content:'Hide'}
+details.fx[open] summary{margin-bottom:14px}
+
+/* ---------- Term with a tap definition ---------- */
+.term-w{position:relative;display:inline}
+.term{appearance:none;border:0;background:none;padding:0;font:inherit;color:inherit;cursor:pointer;text-decoration:underline dotted;text-decoration-color:var(--muted);text-underline-offset:3px;text-decoration-thickness:1.5px}
+.term-w.open .term{color:var(--brand-ink);text-decoration-color:var(--brand)}
+.term-pop{display:none;position:absolute;left:0;top:calc(100% + 8px);z-index:30;width:260px;padding:10px 12px;border-radius:12px;background:var(--ink);color:#fff;font-size:13px;line-height:1.45;box-shadow:0 10px 30px -12px rgba(0,0,0,.4)}
+.term-w.open .term-pop{display:block}
+
+/* ---------- Theme: dark stage, colored bands, readable type (variant A only) ---------- */
+:root{
+  --ink:#0E1A16;
+  --ink-2:#24332D;
+  --muted:#44524C;
+  --line:#CFDDD6;
+  --line-2:#E1EBE6;
+  --stage:#0B2B24;
+  --stage-2:#123A31;
+  --d-ink:#F4F8F5;
+  --d-ink-2:#C9DED4;
+  --d-line:rgba(255,255,255,.14);
+  --mint:#6EE7B7;
+  --mint-ink:#052019;
+  --sun:#FFD166;
+  --sun-soft:#FFF1C7;
+  --sun-ink:#4D3A00;
+  --spike-soft:#FFE4D1;
+  --spike-ink:#7A3407;
+  --band-model:#E7F3ED;
+}
+::selection{background:var(--mint);color:var(--mint-ink)}
+
+/* Eyebrow labels above headings go: the heading carries itself */
+.eyebrow{display:none}
+.sec-head h2{margin-top:0}
+
+/* ---------- Top bar on the stage colour ---------- */
+.topbar{background:rgba(11,43,36,.94);border-bottom:1px solid var(--d-line);color:var(--d-ink)}
+.mark{color:var(--d-ink)}
+.mark i{background:var(--mint)}
+.mark i::after{border-color:var(--stage)}
+.mark span{color:var(--d-ink-2)}
+.topnav{font-size:15px}
+.topnav a{color:var(--d-ink-2)}
+.topnav a:hover{background:rgba(255,255,255,.08);color:#fff}
+
+/* ---------- Dark stage, full bleed ---------- */
+#flow{color:var(--d-ink);box-shadow:0 0 0 100vmax var(--stage);clip-path:inset(0 -100vmax);background:var(--stage)}
+.intro h1{color:#fff;font-size:clamp(36px,3.4vw,50px)}
+.intro .idea{font-size:17.5px;line-height:1.5;color:var(--d-ink-2)}
+.expect{background:var(--stage-2);border-color:var(--d-line)}
+.expect .cell + .cell{border-left-color:var(--d-line)}
+.expect .row.one{border-top-color:var(--d-line)}
+.expect .cell span{font-size:14px;color:var(--d-ink-2)}
+.expect .cell b{font-size:19px;color:#fff}
+.expect .cell b i{color:var(--d-ink-2)}
+.expect .row.one b em{color:var(--mint)}
+.expect .row.one b small{font-size:14px;color:var(--d-ink-2)}
+.expect .cap{border-top-color:var(--d-line);font-size:14px;color:var(--d-ink-2)}
+.expect a.cap:hover{color:#fff}
+.steps{border-top-color:var(--d-line)}
+.steps li{border-bottom-color:var(--d-line)}
+.steps button{color:var(--d-ink);padding:10px 0}
+.steps .n{font-size:13px;color:var(--d-ink-2)}
+.steps .nm{font-size:17px;color:var(--d-ink-2)}
+.steps .wh{font-size:14px;color:var(--d-ink-2)}
+.steps .cap{font-size:15.5px;line-height:1.5;color:var(--d-ink)}
+.steps li.on .nm{color:#fff}
+.steps li.on .n,.steps li.done .n{color:var(--mint)}
+.steps button:hover .nm{color:#fff}
+
+.term{text-decoration-color:var(--d-ink-2)}
+.term-w.open .term{color:var(--mint);text-decoration-color:var(--mint)}
+.term-pop{background:#fff;color:var(--ink);font-size:14.5px;width:280px;box-shadow:0 16px 40px -12px rgba(0,0,0,.55)}
+
+.who b{font-size:16px;color:#fff}
+.who b i{background:var(--mint)}
+.pcol.control .who b i{border-color:var(--d-ink-2)}
+.who span{font-size:14px;color:var(--d-ink-2)}
+.seg{background:rgba(255,255,255,.1)}
+.seg button{font-size:14px;color:var(--d-ink-2);padding:6px 12px}
+.seg button[aria-pressed="true"]{background:#fff;color:var(--ink)}
+.stage[data-pre="1"] .pcol .seg{opacity:.4}
+.device{box-shadow:inset 0 0 0 1.5px #3A3F3C,inset 0 0 0 4px #151817,0 0 0 1px rgba(255,255,255,.1),0 40px 80px -24px rgba(0,0,0,.65)}
+
+.btn.big{background:var(--mint);border-color:var(--mint);color:var(--mint-ink);font-size:17px;font-weight:700;box-shadow:0 12px 28px -12px rgba(0,0,0,.6)}
+.btn.big:hover{background:#8BF0C8;filter:none}
+.btn.big.playing{background:#fff;border-color:#fff;color:var(--ink);box-shadow:none}
+.act .btn.round{background:transparent;border-color:rgba(255,255,255,.28);color:#fff}
+.act .btn.round:hover{border-color:#fff}
+.act .btn.quiet{color:var(--d-ink-2);font-size:15px}
+.act .btn.quiet:hover{color:#fff;background:rgba(255,255,255,.08)}
+.act-note{font-size:14px;color:var(--d-ink-2)}
+
+/* ---------- Light bands ---------- */
+.band{border-top:0}
+#model{background:var(--band-model)}
+#experiment{background:#fff}
+.sec-head h2{font-size:42px;color:var(--ink)}
+.sec-head p{font-size:18px;color:var(--ink-2)}
+.panel{border-color:var(--line)}
+.panel h3{font-size:16px;letter-spacing:0;text-transform:none;color:var(--ink);font-weight:700}
+.tag{font-size:12.5px;letter-spacing:.02em;text-transform:none;font-weight:600;border:0;padding:4px 10px}
+.tag.asm{background:var(--sun-soft);color:var(--sun-ink)}
+.tag.asm::before{background:#E0A800}
+.tag.sim{background:var(--spike-soft);color:var(--spike-ink)}
+.panel h3 .tag:not(.asm):not(.sim){background:var(--line-2);color:var(--ink-2)}
+
+/* Impact model */
+.inp{padding:13px 0 11px}
+.inp label{font-size:16px;color:var(--ink)}
+.inp .num{font-size:16px;background:#fff;border-color:var(--line)}
+.inp small{font-size:14px;color:var(--muted);line-height:1.45}
+.inp-group{font-size:16px;letter-spacing:0;text-transform:none;color:var(--ink);font-weight:700}
+.model-foot span{font-size:14px;color:var(--muted)}
+.cmp .lab{font-size:15px;color:var(--ink-2);font-weight:600}
+.cmp .big{font-size:36px}
+.cmp .big .from{color:var(--muted)}
+.cmp .dl{font-size:15px}
+.cmp .n{font-size:15px}
+.cmp .n b{font-size:18px}
+.cmp .money{background:var(--stage);border-color:var(--stage);color:var(--d-ink)}
+.cmp .money .lab{color:var(--d-ink-2)}
+.cmp .money .big{color:var(--mint);font-size:44px}
+.cmp .money .dl{color:var(--d-ink)}
+.cmp .money .n{color:var(--d-ink-2);border-top-color:var(--d-line)}
+.cmp .money .n b{color:#fff}
+.casc li{font-size:15.5px}
+.casc .op{font-size:13.5px;color:var(--muted)}
+.casc b{font-size:17px}
+.verdict{font-size:16px;font-weight:600;color:var(--ink)}
+.fx li{font-size:15px}
+.fx code{font-size:14px}
+details.fx summary h3 > span:first-child::after{font-size:13px;letter-spacing:0;color:var(--mint-ink);background:var(--mint);border:0;padding:4px 12px;font-weight:700}
+
+/* Experiment design */
+.hyp .say{font-size:26px;color:var(--ink)}
+.evid b{font-size:22px}
+.evid p{font-size:16px;line-height:1.5}
+.evid a{font-size:14px;color:var(--brand-ink);font-weight:600}
+.tl b{font-size:16px}
+.tl span{font-size:15px;line-height:1.45}
+.spec div,.metrics li{font-size:16px;line-height:1.45}
+.spec dt,.metrics .role{font-size:14.5px;color:var(--ink-2);font-weight:600}
+.rules-h{font-size:22px;letter-spacing:-.01em;text-transform:none;color:var(--ink);font-weight:700}
+.rules-h .tag{font-size:12.5px}
+.rule{border:0}
+.rule.ship{background:#DDF4E8}
+.rule.iterate{background:#FFF1C7}
+.rule.stop{background:#FFE4D1}
+.rule p{font-size:16px;color:var(--ink)}
+.rule p span{font-size:13px;letter-spacing:.04em;color:var(--ink-2);font-weight:700}
+
+footer.foot{background:var(--stage);color:var(--d-ink-2);border-top:0;font-size:14px}
+
+@media (max-width:1100px){
+  .act{background:rgba(11,43,36,.95);border-top-color:var(--d-line)}
+}
+@media (max-width:820px){
+  .sec-head h2{font-size:32px}
+}
+
+/* Fit the intro column in one laptop screen */
+@media (min-width:1101px){
+  .stage{grid-template-columns:minmax(280px,390px) auto;gap:56px}
+  .intro{gap:12px}
+  .intro h1{font-size:clamp(34px,3vw,44px)}
+  .intro .idea{font-size:16.5px}
+  .steps button{padding:8px 0}
+  .steps .cap{font-size:15px}
+}
+@media (min-width:1101px) and (max-width:1400px){
+  .who b{font-size:15px}
+  .who span{font-size:13.5px}
+  .pcol .seg button{font-size:13px;padding:5px 9px}
+}
+
+/* Cartridge in the Today header (replaces the avatar and the card below) */
+.hcart{display:grid;justify-items:end;gap:3px;margin-bottom:6px;width:132px}
+.hcart span{font-size:12px;font-weight:600;color:#6E6E73;text-transform:uppercase;letter-spacing:.02em}
+.hcart b{font-size:15px;font-weight:600;color:#1C1C1E}
+.hcart .segs{display:grid;grid-template-columns:repeat(14,1fr);gap:2px;width:100%}
+.hcart .segs i{height:5px;border-radius:3px;background:#DADAE0}
+.hcart .segs i.on{background:#0E6B5C}
+.steps button{grid-template-columns:20px 1fr}
+.hcart{width:150px;gap:4px}
+.hcart .segs{gap:3px}
+.hcart .segs i{height:6px}
+.steps .cap{grid-column:2}
+
+/* =====================================================================
+   Funnel-first page: the business case is the hero, the phone shows the
+   screen behind the selected funnel step.
+   ===================================================================== */
+#flow.stage{max-width:1440px;margin:0 auto;padding:22px 32px 40px;display:grid;grid-template-columns:minmax(0,1fr) auto;justify-content:stretch;gap:0 44px;align-items:start}
+.fmain{min-width:0;display:flex;flex-direction:column}
+.fmain h1{font-family:var(--font-display);font-size:clamp(34px,3vw,44px);line-height:1.05;letter-spacing:-.03em;font-weight:600;color:#fff}
+.fmain .idea{font-size:17.5px;line-height:1.5;color:var(--d-ink);margin-top:10px;max-width:100ch}
+.term{text-decoration-color:var(--mint)}
+.term-pop{font-size:15px}
+
+.fhead{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px 24px;margin-top:22px}
+.fhead h2{font-size:20px;line-height:1.3;font-weight:600;letter-spacing:-.01em;color:#fff}
+.legend{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 10px;font-size:15px;color:var(--d-ink)}
+.legend i{display:inline-block;width:14px;height:14px;border-radius:4px;background:var(--sun);margin-right:8px;vertical-align:-2px}
+.lnk{appearance:none;border:0;background:none;padding:0;font:inherit;font-weight:600;color:var(--mint);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.lnk[hidden]{display:none}
+
+/* ---------- Funnel ---------- */
+.funnel{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));margin-top:6px;--fh:clamp(60px,calc(100vh - 690px),230px)}
+.fstep{position:relative;display:flex;flex-direction:column;min-width:0;scroll-margin-top:68px}
+.fshape{display:block;width:100%;height:var(--fh);flex:none;overflow:visible}
+.fshape .blk{fill:var(--mint)}
+.fshape .con{fill:var(--mint);opacity:.28}
+.fstep.s-off .fshape .blk,.fstep.s-off .fshape .con{fill:#A9C2B8}
+.fcard{flex:1;margin:8px 8px 0 0;padding:12px 12px 14px;border-radius:16px;background:var(--stage-2);border:1.5px solid transparent;cursor:pointer}
+.fstep:last-child .fcard{margin-right:0}
+.fstep:hover .fcard{border-color:rgba(255,255,255,.34)}
+.fstep.sel .fcard{border-color:var(--mint);background:#17483D}
+.fhit{appearance:none;border:0;background:none;padding:0;margin:0;text-align:left;cursor:pointer;display:block;width:100%;color:inherit}
+.fhit:focus-visible{outline:2px solid var(--mint)}
+.fnum{display:block;font-family:var(--font-display);font-size:clamp(32px,2.9vw,42px);line-height:1.05;font-weight:600;letter-spacing:-.03em;color:#fff;white-space:nowrap}
+.flab{display:block;font-size:15.5px;line-height:1.3;color:var(--d-ink);margin-top:4px;min-height:2.6em}
+.fstep.s-ltv .fnum{color:var(--mint)}
+.hbar{display:none}
+
+/* Assumption: a yellow, editable number */
+.asm{display:grid;grid-template-columns:auto minmax(0,1fr);gap:0 8px;align-items:center;margin-top:8px}
+.asm .num{display:inline-flex;align-items:baseline;justify-content:center;justify-self:start;min-width:56px;background:var(--sun);color:#2B2000;border-radius:8px;padding:3px 7px 3px 5px;font-size:16px;font-weight:700;cursor:text;transition:box-shadow .15s}
+.asm .num input{width:3ch;field-sizing:content;min-width:1ch;border:0;background:transparent;font:inherit;color:inherit;text-align:right;padding:0;margin:0;-moz-appearance:textfield;appearance:textfield;font-variant-numeric:tabular-nums}
+.asm .num input::-webkit-outer-spin-button,.asm .num input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.asm .num input:focus{outline:none}
+@supports (field-sizing:content){.asm .num input{width:auto}}
+.asm .num:hover{box-shadow:0 0 0 2px rgba(255,255,255,.55)}
+.asm .num:focus-within{box-shadow:0 0 0 2px #fff}
+.asm .al{font-size:14px;line-height:1.25;color:var(--d-ink)}
+.asm .rng{display:none;grid-column:1/-1;margin-top:4px}
+.asm .rng::-webkit-slider-runnable-track{background:linear-gradient(to right,var(--sun) var(--p),rgba(255,255,255,.24) var(--p))}
+.asm .rng::-webkit-slider-thumb{border-color:var(--sun);background:var(--sun)}
+.asm .rng::-moz-range-track{background:rgba(255,255,255,.24)}
+.asm .rng::-moz-range-progress{background:var(--sun)}
+.asm .rng::-moz-range-thumb{border-color:var(--sun);background:var(--sun)}
+/* Where the funnel ends: money per 10,000 new users */
+.fsub{height:var(--fh);flex:none;display:flex;flex-direction:column;justify-content:center;font-size:15px;line-height:1.4;color:var(--d-ink)}
+.fsub span{display:block;padding-left:12px;border-left:2px solid var(--mint);white-space:nowrap}
+.fsub b{color:#fff;font-weight:700;font-size:17px}
+
+/* ---------- Selected step: what the phone shows, and the one next action ---------- */
+.below{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px 28px;align-items:center;margin-top:14px;padding:14px 14px 14px 20px;border-radius:16px;background:var(--stage-2)}
+.below:empty{display:none}
+.detail{font-size:16px;line-height:1.5;color:var(--d-ink)}
+.act{display:flex}
+.act .btn.big{min-width:290px}
+#flow[data-mode="wide"] .fstep.sel::after{content:"";position:absolute;left:calc(50% - 13px);bottom:-14px;border:9px solid transparent;border-top-width:0;border-bottom-color:var(--stage-2)}
+
+/* ---------- Phone ---------- */
+.duo{display:flex;flex-direction:column;align-items:center;gap:12px;min-width:0}
+.viewsw{display:inline-flex}
+.viewsw button{font-size:15px;padding:7px 16px;font-weight:600}
+#flow[data-view="test"] .pcol.control,#flow[data-view="control"] .pcol.test{display:none}
+.act-note{font-size:14px;color:var(--d-ink-2);margin:0}
+.card.focus{box-shadow:0 0 0 3px #0E6B5C}
+
+/* ---------- Expected result ---------- */
+#model.band{padding:56px 24px 64px}
+#experiment.band{padding-top:64px}
+.sec-head{margin-bottom:28px}
+.sec-head h2{font-size:38px}
+#model .cmp{grid-template-columns:1fr 1fr}
+#model .verdict{margin-top:16px;padding:14px 20px;border:0;border-radius:14px;background:#fff;align-items:center}
+#model .verdict::before{transform:none}
+.tag,.rules-h .tag{font-size:14px;letter-spacing:0}
+.rule p span{font-size:14px;letter-spacing:0;text-transform:none}
+details.fx summary h3 > span:first-child::after{font-size:14px}
+.fx li{font-size:15.5px}
+.fx code{font-size:14.5px}
+.evid a{white-space:normal}
+
+/* Laptop widths: the label goes under its number so it stays on one line */
+@media (min-width:1200px) and (max-width:1399px){
+  #flow.stage{padding-left:24px;padding-right:24px;gap:0 36px}
+  .flab{min-height:3.9em}
+  .fstep:not(.s-ltv) .asm{grid-template-columns:minmax(0,1fr);margin-top:9px}
+  .fstep:not(.s-ltv) .asm .al{margin-top:3px}
+  .fsub{font-size:14px}
+  .fsub b{font-size:15.5px}
+  .fsub span{padding-left:8px}
+  .fmain .idea{font-size:17px}
+}
+
+/* ---------- Narrow: the funnel runs down, the phone opens inside the selected step ---------- */
+@media (max-width:1199px){
+  #flow.stage{grid-template-columns:minmax(0,1fr);max-width:672px;padding:20px 16px 0;justify-items:stretch}
+  .fmain h1{font-size:34px}
+  .fmain .idea{font-size:17px}
+  .funnel{grid-template-columns:minmax(0,1fr);gap:10px;margin-top:12px}
+  .fshape{display:none}
+  .fcard{margin:0;padding:14px 16px 16px;flex:none}
+  .fstep:last-child .fcard{margin:0}
+  .fhit{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:baseline}
+  .fnum{font-size:36px;min-width:84px}
+  .flab{font-size:16px;min-height:0;margin:0}
+  .fsub{order:1;height:auto;display:block;padding:10px 16px 2px;font-size:16px}
+  .fsub span{display:inline;padding:0;border:0;white-space:normal}
+  .fcard{order:0}
+  .hbar{display:block;height:6px;border-radius:3px;background:rgba(255,255,255,.14);margin:10px 0 4px;overflow:hidden}
+  .hbar i{display:block;height:100%;border-radius:3px;background:var(--mint);transition:width .25s var(--ease)}
+  .fstep.s-off .hbar i{background:#A9C2B8}
+  .asm{margin-top:10px;gap:0 10px}
+  .asm .al{font-size:15px}
+  .asm .rng{display:block}
+  .fstep > .detail{order:2;padding:12px 4px 2px}
+  .fstep > .duo{order:3;padding:14px 0 10px}
+  #flow[data-open="0"] .duo{display:none}
+  #flow > .act{position:sticky;bottom:0;z-index:15;justify-content:center;margin:16px -16px 0;padding:10px 16px calc(10px + env(safe-area-inset-bottom));background:rgba(11,43,36,.95);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-top:1px solid var(--d-line)}
+  #flow > .act .btn.big{flex:1;min-width:0;max-width:440px;height:52px}
+  #model .cmp{grid-template-columns:1fr}
+  .fx summary h3{flex-wrap:wrap}
+  .tag{white-space:normal}
+}
+@media (max-width:820px){
+  .sec-head h2{font-size:30px}
+  #model.band{padding:44px 16px 52px}
+  .cmp .big{font-size:32px}
+}
+
+</style>
+</head>
+<body>
+<header class="topbar" id="top"></header>
+<main>
+  <section class="stage" id="flow" aria-label="Funnel"></section>
+  <section class="band alt" id="model" aria-label="Expected result"></section>
+  <section class="band" id="experiment" aria-label="Experiment design"></section>
+</main>
+<footer class="foot" id="foot"></footer>
+<script>
+/* =====================================================================
+   CONFIG: every piece of copy, every number and every model default.
+   Glucose, steps and weight values are simulated. Model inputs are assumptions.
+   ===================================================================== */
+const CONFIG = {
+  brand: 'Glow',
+  doc: { title: 'Walk off the sugar spike · Glow experiment prototype' },
+  top: {
+    sub: 'experiment prototype',
+    nav: [{ href: '#flow', label: 'Funnel' }, { href: '#model', label: 'Expected result' }, { href: '#experiment', label: 'Experiment design' }],
+    variantLink: { href: '', label: 'Variant B: personal trigger' } // set href to show a link to the second prototype
+  },
+  labels: { simulated: 'Simulated data', simulatedShort: 'Simulated', simulatedNote: 'Simulated sensor data', assumption: 'Assumption', assumptions: 'All inputs are assumptions' },
+
+  intro: {
+    eyebrow: 'M3 retention experiment',
+    title: 'Walk off the sugar spike',
+    idea: '{term} have {ratio}× higher M3 retention than users who don\'t lose weight. To get more users on track, Glow tells them to walk for 10 minutes when a sugar spike starts after a meal: a lower spike means less snacking.',
+    term: { text: 'On-track users', def: 'On track = losing 0.5% or more of body weight a week by day 28. For a 90 kg user that is 0.45 kg a week.' },
+    expect: { onTrack: 'On-track at day 28', m3: 'M3 retention', ltv: 'LTV per new user', ltvSub: 'gross profit', cap: 'Expected result', capLink: 'Assumptions' },
+    back: 'Back', reset: 'Reset',
+    actions: { home: 'Start the experiment', value: 'Ask for notifications', permission: 'Allow and start lunch',
+      play: 'Play lunch', pause: 'Pause', lunchDone: 'Next: week summary', week: 'See the impact model ↓' }
+  },
+
+  /* Funnel-first hero. Each step shows a count per 1,000 new users, its assumptions (keys of model.inputs)
+     and the phone screen that drives it. {key} in text is replaced by the note of that model input. */
+  funnel: {
+    head: 'Of 1,000 new weight-loss users in the test group',
+    legend: 'Yellow numbers are assumptions. Change any of them.',
+    reset: 'Reset to defaults',
+    viewLabel: 'Group shown on the phone',
+    per10k: '<span><b>{rev10}</b> revenue,</span> <span><b>{gp10}</b> gross profit</span> <span>per 10,000 new users</span>',
+    steps: [
+      { id: 'off', label: 'are off-track at day 28', inputs: [{ key: 'offTrack', label: 'of new users' }],
+        text: '{offTrack} Both groups open the same app. Only the test group sees the Sugar spike alerts card.',
+        next: 'Next: allow notifications' },
+      { id: 'allow', label: 'allow notifications', inputs: [{ key: 'allow', label: 'of them' }],
+        text: 'Before the iOS prompt, one screen gives the reason to say yes: spike, dip, hunger, snacking. Control sees nothing new.',
+        next: 'Show the iOS prompt',
+        textPerm: 'The iOS prompt comes right after the value screen. Tap Don’t Allow to see a test user without push notifications.',
+        nextPerm: 'Allow and start lunch' },
+      { id: 'walk', label: 'walk only because of the push', inputs: [{ key: 'walkPush', label: 'walk in test' }, { key: 'walkAnyway', label: 'walk in control' }],
+        text: 'One lunch, 2 hours in 16 seconds. Glucose rises 30+ mg/dL within 30 minutes: test gets a push notification, control is only logged. {walkAnyway}',
+        play: 'Play lunch', pause: 'Pause', next: 'Next: on-track pace' },
+      { id: 'on', label: 'reach on-track pace', inputs: [{ key: 'become', label: 'of new walkers' }],
+        text: 'Test sees what the walks did: sugar spikes walked off and the average spike on walk days. Control sees the standard summary. {become}',
+        next: 'Next: M3 retention' },
+      { id: 'keep', label: 'more users kept to M3', inputs: [{ key: 'retOn', label: 'stay if on‑track' }, { key: 'retOff', label: 'stay if off‑track' }],
+        text: '{retOff} Test sees the weight trend against the on-track pace. Control sees the trend without the pace.',
+        next: 'Next: LTV' },
+      { id: 'ltv', label: 'LTV per new user, gross profit', inputs: [{ key: 'price', label: 'monthly refill' }, { key: 'margin', label: 'gross margin' }, { key: 'months', label: 'extra paid' }],
+        text: '{months} Refill: {price} Gross margin: {margin}',
+        next: 'See the expected result ↓' }
+    ]
+  },
+
+  chapters: [
+    { id: 'home', name: 'Home', when: 'Day 6',
+      caption: 'Both groups open the same app: current glucose, the day chart with the 70–140 mg/dL target band and the cartridge day. Only the test group sees the Sugar spike alerts card.',
+      short: 'Same app in both groups. Only test sees the Sugar spike alerts card.' },
+    { id: 'value', name: 'Why walk', when: 'Day 6',
+      caption: 'Before the system prompt, one screen gives the reason to say yes: spike, dip, hunger, snacking. Control sees nothing new.',
+      short: 'Test sees the reason before the system prompt. Control sees nothing new.' },
+    { id: 'permission', name: 'Permission', when: 'Day 6',
+      caption: 'The iOS prompt comes right after the value screen. The model assumes 85% allow. Tap Don’t Allow to see a test user without push notifications.',
+      short: 'The iOS prompt follows the value screen. The model assumes 85% allow.' },
+    { id: 'lunch', name: 'Lunch', when: '12:30–14:30',
+      caption: 'One lunch, 2 hours in 16 seconds. Glucose rises 30+ mg/dL within 30 minutes: test gets a push notification, control is only logged. A walk lowers the spike in either group. The push notification raises how many users walk.',
+      short: 'Same lunch, same trigger. Test gets a push notification, control is logged silently.' },
+    { id: 'week', name: 'Week summary', when: 'Day 7',
+      caption: 'Test sees what the walks did: sugar spikes walked off, average spike on walk days, weight trend. Control sees the standard summary.',
+      short: 'Test sees what the walks did. Control sees the standard summary.' }
+  ],
+
+  groups: {
+    test: { name: 'Test group', short: 'Test', sub: 'Push at spike start', walkOn: 'Walks', walkOff: 'No walk', segLabel: 'Test user after the push notification',
+      note: 'Simulated sensor data. In the model, 35% walk regularly with push notifications (assumption).' },
+    control: { name: 'Control group', short: 'Control', sub: 'No push', walkOn: 'Walks', walkOff: 'No walk', segLabel: 'Control user after lunch',
+      note: 'Simulated sensor data. In the model, 10% walk anyway without push notifications (assumption).' }
+  },
+
+  /* Trigger rule and the definition of "walked" */
+  trigger: { rise: 30, windowMin: 30, fromHour: 7, toHour: 22, maxPerDay: 2, walkedSteps: 500, walkedWindowMin: 30 },
+
+  /* Simulated sensor data. Times are minutes from midnight; lunch points are minutes after 12:30. */
+  glucose: {
+    unit: 'mg/dL', band: [70, 140],
+    morning: [[360, 92], [420, 90], [465, 93], [505, 131], [545, 117], [585, 100], [630, 94], [690, 96], [750, 98]],
+    lunchStartMin: 750,
+    lunchNoWalk: [[0, 98], [4, 99], [24, 128], [36, 146], [52, 162], [66, 148], [80, 116], [94, 86], [104, 74], [112, 77], [120, 84]],
+    lunchWalkAfter: [[34, 136], [48, 130], [62, 118], [80, 105], [100, 95], [120, 96]],
+    dipCardBelow: 86
+  },
+  sim: { durationSec: 16, minutes: 120, walkStartAfterTriggerMin: 2, walkMinutes: 10, walkSteps: 1150, idleSteps: 90, bannerMinutes: 40 },
+
+  phone: {
+    tabs: ['Today', 'Trends', 'Meals', 'Profile'],
+    home: { date: 'Tuesday 17 Nov', title: 'Today', initials: 'AK', glucoseLabel: 'Glucose now', unit: 'mg/dL', sensorNote: 'Sensor live · updated just now', target: 'Target 70–140 mg/dL',
+      chartDay: 'Today', chartLunch: 'Since 11:30', words: { inRange: 'In range', above: 'Above range', below: 'Below range' } },
+    cartridge: { label: 'Cartridge', text: 'Day {day} of {total}', day: 6, total: 14 },
+    cards: {
+      offer: { icon: 'walk', title: 'Sugar spike alerts', text: 'Get a nudge to walk when a spike starts. A lower spike means less hunger later.', chev: true },
+      on: { icon: 'bell', title: 'Sugar spike alerts are on', text: 'We tell you when a spike starts. At most 2 a day, never at night.' },
+      off: { icon: 'bell', title: 'Sugar spike alerts are off', text: 'Turn on notifications in Settings to get a nudge when a spike starts.' },
+      walking: { icon: 'walk', title: 'Walking · {min} of {total} min', text: 'Steps from Apple Health. Glucose is slowing down.', bigSub: 'steps' },
+      walked: { icon: 'walk', title: 'Sugar spike walked off', text: 'Peak {peak} mg/dL. Your usual after lunch is {usual}.', bigSub: 'steps' },
+      dip: { icon: 'dip', title: 'Glucose is dipping', text: 'Cravings hit now. The dip follows the spike. A 10-minute walk next time makes both smaller.', amber: true }
+    },
+    value: {
+      close: 'Close', eyebrow: 'Sugar spike alerts', title: 'Walk off the sugar spike',
+      lead: 'After a sugar spike, glucose dips. The dip makes you hungry, and you snack.',
+      chain: ['Spike', 'Dip', 'Hunger', 'Snacking'],
+      facts: [
+        { num: '~300 kcal', text: 'more a day is what people with big dips eat.' },
+        { num: '~17% lower', text: 'spike when you walk for 10 minutes after a meal.' },
+        { num: 'Up to 0.3 kg', text: 'of extra fat a week that the walk can spare you.' }
+      ],
+      promise: 'At most 2 push notifications a day. Never at night.',
+      cta: 'Turn on spike alerts', later: 'Not now'
+    },
+    permission: { title: '“Glow” Would Like to Send You Notifications', text: 'Notifications may include alerts, sounds and icon badges. These can be configured in Settings.', deny: 'Don’t Allow', allow: 'Allow' },
+    push: { app: 'Glow', when: 'now', text: 'Glucose is rising after lunch. Walk for 10 minutes now. A lower spike means less hunger and less snacking later.' },
+    week: {
+      clock: '20:10', range: '12 – 18 Nov', title: 'Your week',
+      startWeightKg: 90, onTrackPctPerWeek: 0.5,
+      weights: { walk: [90.0, 89.9, 89.9, 89.8, 89.7, 89.6, 89.5], noWalk: [90.0, 90.0, 89.9, 89.9, 89.9, 89.8, 89.8] },
+      spikes: { total: 8, walkedIfWalks: 5, avgWalkDays: 137, avgOtherDays: 160, avgNoWalks: 161 },
+      standard: { avgGlucose: 104, timeInRange: 92 },
+      t: { walkedOff: 'Sugar spikes walked off', of: 'of {total}', avgSpike: 'Average spike', walkDays: 'Walk days', otherDays: 'Other days', allDays: 'All days', weight: 'Weight trend', thisWeek: 'kg this week',
+        onTrack: 'On track', below: 'Below pace', pace: 'On-track pace: {pace} kg a week (0.5% of body weight).', avgGlucose: 'Average glucose', tir: 'Time in range', tirSub: 'Target 70–140 mg/dL', noWalks: 'No walks after a spike this week.' }
+    }
+  },
+
+  ledger: {
+    title: 'Experiment view', sub: 'One lunch, one trigger rule, two groups',
+    waiting: 'Lunch starts at 12:30', triggerMark: 'Trigger {time}',
+    play: 'Play lunch', pause: 'Pause', replay: 'Replay lunch', scrub: 'Time of the simulated lunch',
+    rows: {
+      assign: { label: 'Day 1 · split 50/50 at user level', test: 'Alerts card on Home', control: 'Standard app' },
+      value: { label: 'Value screen before the prompt', test: 'Shown', control: 'Not shown' },
+      perm: { label: 'Notification permission', asked: 'Asked', yes: 'Allowed', no: 'Not allowed', control: 'Not asked' },
+      trigger: { label: '{time} · trigger: +{rise} mg/dL within {window} min', sent: 'Push sent · 1 of max 2', notSent: 'No push: not allowed', control: 'Logged, not sent' },
+      steps: { label: 'Steps in {window} min · {steps}+ counts as walked', walked: 'walked', notWalked: 'not walked', counting: 'counting' },
+      peak: { label: 'Peak after lunch' },
+      low: { label: 'Lowest after the peak' }
+    }
+  },
+
+  experiment: {
+    eyebrow: 'Experiment design', title: 'One server rule, one flag, one decision at day 28',
+    lede: 'The app already sends glucose alerts. The test adds one rule, one screen before the permission prompt, and step data from HealthKit. The decision rule is written before launch.',
+    hypothesis: 'If the app tells a user to walk at the moment a sugar spike starts, the user snacks less after meals. <em>More users are on track at day 28, and on-track users stay to month 3.</em>',
+    evidence: [
+      { num: '74% vs 41%', text: 'Users who lose 0.5% or more of body weight a week stay: 74% of them stayed to week 18 vs 41% of the others.', src: 'National DPP, 41,000 people', href: 'https://pubmed.ncbi.nlm.nih.gov/32616617/' },
+      { num: '−0.7 kg', text: 'A CGM alone does not make people lose weight. The effect is not significant.', src: 'Meta-analysis', href: 'https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11668089/' },
+      { num: '~300 kcal', text: 'After a sugar spike, glucose dips. People with big dips eat about 300 kcal more a day.', src: 'ZOE PREDICT', href: 'https://www.nature.com/articles/s42255-021-00383-x' },
+      { num: '~17%', text: 'A short walk after a meal lowers the sugar spike by about 17%.', src: 'Meta-analysis, 7 trials', href: 'https://link.springer.com/article/10.1007/s40279-022-01649-4' }
+    ],
+    timeline: [
+      { day: 'Day 1–14', text: 'New users enter the test in their first 14 days.' },
+      { day: 'Day 14', text: 'Check the funnel and the guardrail.' },
+      { day: 'Day 28', text: 'Decide on the on-track share.', key: true },
+      { day: 'Day 90', text: 'Compare M3 retention.' }
+    ],
+    who: { title: 'Who and split', rows: [
+      ['Who', 'New weight-loss users without diabetes, in their first 14 days.'],
+      ['Split', '50/50 at user level, by feature flag.'],
+      ['Test', 'Alerts card, value screen, permission prompt, push notification on trigger.'],
+      ['Control', 'Standard app. The trigger runs silently and is logged.']
+    ] },
+    rule: { title: 'Trigger rule', rows: [
+      ['Trigger', '+30 mg/dL within 30 min after a meal.'],
+      ['Hours', '07:00–22:00 only.'],
+      ['Limit', 'Max 2 push notifications a day.'],
+      ['“Walked”', '500+ steps within 30 min, from Apple Health.']
+    ] },
+    metrics: { title: 'Metrics', rows: [
+      { role: 'Decision', cls: 'key', text: 'On-track share at day 28: users losing 0.5%+ of body weight a week. Proxy for M3 retention.' },
+      { role: 'Funnel', text: 'Share who allow push notifications. Share who walk 500+ steps in 30 min after a push notification.' },
+      { role: 'Mechanism', text: 'Post-meal glucose rise, test vs control. It shows that the walks cut the sugar spike.' },
+      { role: 'Guardrail', cls: 'guard', text: 'Cartridge reorder rate at day 28 must not drop vs control.' },
+      { role: 'Long-term', text: 'M3 retention compared at day 90: share who still buy cartridges in month 3.' }
+    ] },
+    decision: { title: 'Decision rule', note: 'Written before launch', rules: [
+      { cls: 'ship', name: 'Ship', when: 'On-track share goes up 3+ pp and reorders do not drop.', then: 'Roll out to all new weight-loss users. Confirm on M3 retention at day 90.' },
+      { cls: 'iterate', name: 'Iterate', when: 'Walking is up but the on-track share is flat.', then: 'Users walk but weight does not change. The next test adds food swaps.' },
+      { cls: 'stop', name: 'Stop', when: 'The guardrail is breached: reorders drop vs control.', then: 'Roll back, even if the on-track share went up.' }
+    ], whenLabel: 'If', thenLabel: 'Then' }
+  },
+
+  model: {
+    eyebrow: 'Impact model', title: 'Expected result',
+    lede: 'All inputs are assumptions until the test measures them. The sample size and the ship check follow the funnel above.',
+    inputsTitle: 'Inputs', resultsTitle: 'Of 1,000 new users in the test group', formulasTitle: 'Formulas with the current numbers',
+    reset: 'Reset to defaults', resetNote: 'Defaults match the memo. Money inputs are market estimates.',
+    z: { alpha: 1.959964, power: 0.841621 }, powerText: '80% power, alpha 0.05, two-sided',
+    shipThresholdPp: 3,
+    inputs: [
+      { key: 'retOn', label: 'M3 retention of on-track users', value: 55, min: 0, max: 100, note: 'On track = losing 0.5%+ of body weight a week at day 28.' },
+      { key: 'retOff', label: 'M3 retention of off-track users', value: 12, min: 0, max: 100, note: 'Each user moved to on-track gains {gap} pp chance to stay.' },
+      { key: 'offTrack', label: 'Share of off-track users in control', value: 65, min: 20, max: 95, note: 'These are the users the experiment tries to move.' },
+      { key: 'allow', label: 'Allow notifications', value: 85, min: 0, max: 100, note: 'The users the push can reach.' },
+      { key: 'walkAnyway', label: 'Off-track users who walk after meals, control', value: 10, min: 0, max: 100, note: 'Walking regularly = after at least every second spike.' },
+      { key: 'walkPush', label: 'Off-track users who walk after meals, test', value: 35, min: 0, max: 100 },
+      { key: 'become', label: 'New walkers who reach on-track pace', value: 31, min: 0, max: 100, note: 'A walk covers about 70% of the on-track pace, so only users close to the line cross it.' },
+      { key: 'price', group: 'Money', label: 'Monthly refill, 2 cartridges', value: 99, min: 30, max: 250, unit: '$', note: 'Stelo sells 2 sensors for $99.' },
+      { key: 'margin', label: 'Gross margin', value: 50, min: 10, max: 90, note: 'Nutrisense reports about 50%.' },
+      { key: 'months', label: 'Extra paid months per user kept to M3', value: 6, min: 1, max: 24, unit: 'mo', note: 'Kept users pay to about month 8 (Nutrisense average tenure 7–8 months); lost users stop around month 2.' }
+    ],
+    out: {
+      onTrack: 'On-track share at day 28', m3: 'M3 retention', control: 'Control', test: 'Test',
+      nOn: '<b>{n}</b> users per group to see it by day 28. This is the decision metric.',
+      nM3: '<b>{n}</b> users per group to see it at day 90. Too slow to decide on.',
+      ltv: 'LTV per new user, gross profit', ltvDl: '{rev} revenue per new user · {kept} more users per 1,000 kept to M3',
+      ltvN: 'Per 10,000 new weight-loss users: <b>{rev10}</b> revenue, <b>{gp10}</b> gross profit.',
+      cascade: [
+        { key: 'notOn', label: 'Off-track in control', op: 'off-track share' },
+        { key: 'allow', label: 'of them allow notifications', op: '× allow' },
+        { key: 'extra', label: 'of them walk only because of the push', op: '× (test − control walkers)' },
+        { key: 'moved', label: 'of them reach on-track pace', op: '× new walkers on track' }
+      ],
+      shipYes: 'Expected lift {lift} pp clears the 3 pp ship threshold.',
+      shipNo: 'Expected lift {lift} pp is below the 3 pp ship threshold.'
+    },
+    formulas: [
+      { name: 'New walkers', expr: 'walkers in test − walkers in control = {walkPush} − {walkAnyway} = <b>{extra}</b>' },
+      { name: 'Moved to on-track', expr: '{offTrack} × {allow} × {extra} × {become} = <b>{moved} pp</b>' },
+      { name: 'On-track in test', expr: '{onTrack1} + {moved} pp = <b>{onTest}</b>' },
+      { name: 'M3 retention', expr: 'on-track × {retOn} + others × {retOff}: control <b>{m3c}</b>, test <b>{m3t}</b>' },
+      { name: 'LTV per new user', expr: 'M3 lift × extra months × refill × margin = {dRet} pp × {months} × ${price} × {margin} = <b>{ltv}</b>' },
+      { name: 'Sample size per group', expr: '(1.96 + 0.84)² × (p₁(1 − p₁) + p₂(1 − p₂)) ÷ (p₂ − p₁)²: on-track <b>{nOn}</b>, M3 retention <b>{nM3}</b>' }
+    ]
+  },
+
+  foot: ['Glow is a fictional brand.', 'Glucose, steps and weight on this page are simulated.', 'All impact model inputs are assumptions.']
+};
+
+/* ---------- Shared helpers ---------- */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const tpl = (s, v = {}) => String(s).replace(/\{(\w+)\}/g, (m, k) => (k in v ? v[k] : m));
+const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+const fmtInt = n => Math.round(n).toLocaleString('en-US');
+const pct = (x, d = 1) => (x * 100 + 1e-9).toFixed(d) + '%';
+const clock = min => { const m = Math.round(min); return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
+const setText = (el, v) => { if (el && el.textContent !== String(v)) el.textContent = v; };
+const setHTML = (el, v) => { if (el && el.__h !== v) { el.innerHTML = v; el.__h = v; } };
+
+/* Monotone cubic interpolation through key points. Peaks stay exactly on the key points. */
+function pchip(pts, m0) {
+  const n = pts.length, xs = pts.map(p => p[0]), ys = pts.map(p => p[1]), h = [], d = [];
+  for (let i = 0; i < n - 1; i++) { h[i] = xs[i + 1] - xs[i]; d[i] = (ys[i + 1] - ys[i]) / h[i]; }
+  const m = new Array(n);
+  m[0] = m0 === undefined ? d[0] : m0; m[n - 1] = d[n - 2];
+  for (let i = 1; i < n - 1; i++) m[i] = d[i - 1] * d[i] <= 0 ? 0 : (3 * (h[i - 1] + h[i])) / ((2 * h[i] + h[i - 1]) / d[i - 1] + (h[i] + 2 * h[i - 1]) / d[i]);
+  return x => {
+    if (x <= xs[0]) return ys[0];
+    if (x >= xs[n - 1]) return ys[n - 1];
+    let i = 0; while (x > xs[i + 1]) i++;
+    const t = (x - xs[i]) / h[i], t2 = t * t, t3 = t2 * t;
+    return (2 * t3 - 3 * t2 + 1) * ys[i] + (t3 - 2 * t2 + t) * h[i] * m[i] + (-2 * t3 + 3 * t2) * ys[i + 1] + (t3 - t2) * h[i] * m[i + 1];
+  };
+}
+const sample = (fn, a, b, step) => { const out = []; for (let x = a; x < b - 1e-9; x += step) out.push([x, fn(x)]); out.push([b, fn(b)]); return out; };
+
+/* ---------- Icons ---------- */
+const ICON = {
+  signal: '<svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.5" width="3" height="6.5" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>',
+  wifi: '<svg width="17" height="12" viewBox="0 0 17 12" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M1.2 4.3a10.4 10.4 0 0 1 14.6 0"/><path d="M3.9 7a6.6 6.6 0 0 1 9.2 0"/><circle cx="8.5" cy="10.2" r="1.1" fill="currentColor" stroke="none"/></svg>',
+  battery: '<svg width="27" height="13" viewBox="0 0 27 13" fill="none"><rect x=".5" y=".5" width="23" height="12" rx="3.6" stroke="currentColor" opacity=".4"/><rect x="2" y="2" width="20" height="9" rx="2.3" fill="currentColor"/><path d="M25 4.5v4c.8-.3 1.5-1.1 1.5-2s-.7-1.7-1.5-2z" fill="currentColor" opacity=".45"/></svg>',
+  arrow: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12h14M13 6.5l5.5 5.5-5.5 5.5"/></svg>',
+  chev: '<svg width="9" height="15" viewBox="0 0 9 15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 1.5l6 6-6 6"/></svg>',
+  x: '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1.5 1.5l9 9M10.5 1.5l-9 9"/></svg>',
+  bell: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16.5h12l-1.4-2.4V10a4.6 4.6 0 0 0-9.2 0v4.1L6 16.5z"/><path d="M10.2 19.2a2 2 0 0 0 3.6 0"/></svg>',
+  walk: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.2" cy="4.3" r="1.7" fill="currentColor" stroke="none"/><path d="M12.6 8.2l-2.2 5.2 3 2.4.9 5"/><path d="M10.4 13.4l-1.2 3.4L6.6 20"/><path d="M12.6 8.2L9 9.8l-1 3"/><path d="M12.9 9.4l2.2 2.4 2.7.7"/></svg>',
+  dip: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8c3 0 3.5 9 7.5 9s4-5 6.5-5 2.5 1 4 1"/></svg>',
+  spark: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17c2.5 0 3-10 6-10s3.5 12 6.5 12 2.5-5 5.5-5"/></svg>',
+  play: '<svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M2.5 1.200v9.600a.6.6 0 0 0 .9.5l7.800-4.800a.6.6 0 0 0 0-1L3.400.7a.6.6 0 0 0-.9.5z"/></svg>',
+  pause: '<svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><rect x="2" y="1" width="3" height="10" rx="1"/><rect x="7" y="1" width="3" height="10" rx="1"/></svg>',
+  replay: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.600-5.900"/><path d="M4 4v5h5"/></svg>',
+  tabs: [
+    '<svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/></svg>',
+    '<svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5M4 19h16"/><path d="M7.5 14.5l3.5-4 3 2.5 4.5-6"/></svg>',
+    '<svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3.5v6a2.5 2.5 0 0 0 5 0v-6M9.5 3.5V21"/><path d="M17.5 21v-7.5M17.5 13.5c-2 0-2.5-2-2.5-5s1-5 2.5-5v10z"/></svg>',
+    '<svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8.5" r="3.800"/><path d="M4.5 20c1-3.600 4-5.200 7.5-5.200s6.5 1.600 7.5 5.200"/></svg>'
+  ]
+};
+
+/* ---------- Chart ---------- */
+function chartSVG(o) {
+  const w = o.w, h = o.h, p = Object.assign({ l: 6, r: 30, t: 12, b: 20 }, o.pad);
+  const X = v => p.l + (v - o.x[0]) / (o.x[1] - o.x[0]) * (w - p.l - p.r);
+  const Y = v => p.t + (1 - (v - o.y[0]) / (o.y[1] - o.y[0])) * (h - p.t - p.b);
+  const f = n => (Math.round(n * 10) / 10);
+  const path = pts => pts.map((q, i) => (i ? 'L' : 'M') + f(X(q[0])) + ' ' + f(Y(q[1]))).join('');
+  const yHi = Y(o.band[1]), yLo = Y(o.band[0]);
+  let s = `<svg viewBox="0 0 ${w} ${h}" width="100%" role="img" aria-label="${esc(o.label || 'Glucose chart')}" style="display:block;overflow:visible">`;
+  s += `<defs><clipPath id="${o.id}-hi"><rect x="0" y="-20" width="${w}" height="${f(yHi + 20)}"/></clipPath><clipPath id="${o.id}-lo"><rect x="0" y="${f(yHi)}" width="${w}" height="${h}"/></clipPath></defs>`;
+  s += `<rect class="ch-band" x="${f(X(o.x[0]))}" y="${f(yHi)}" width="${f(X(o.x[1]) - X(o.x[0]))}" height="${f(yLo - yHi)}" rx="2"/>`;
+  s += `<line class="ch-edge" x1="${f(X(o.x[0]))}" x2="${f(X(o.x[1]))}" y1="${f(yHi)}" y2="${f(yHi)}"/><line class="ch-edge" x1="${f(X(o.x[0]))}" x2="${f(X(o.x[1]))}" y1="${f(yLo)}" y2="${f(yLo)}"/>`;
+  s += `<text class="ch-tick b" x="${f(X(o.x[1]) + 5)}" y="${f(yHi + 3.5)}">${o.band[1]}</text><text class="ch-tick b" x="${f(X(o.x[1]) + 5)}" y="${f(yLo + 3.5)}">${o.band[0]}</text>`;
+  (o.xticks || []).forEach(t => { s += `<text class="ch-tick" x="${f(X(t.x))}" y="${h - 4}" text-anchor="${t.anchor || 'middle'}">${esc(t.label)}</text>`; });
+  (o.spans || []).forEach(sp => { s += `<rect class="ch-walk" x="${f(X(sp.x0))}" y="${f(h - p.b - 3)}" width="${f(Math.max(0, X(sp.x1) - X(sp.x0)))}" height="3" rx="1.5"/>`; });
+  (o.vlines || []).forEach(v => { s += `<line class="ch-v" x1="${f(X(v.x))}" x2="${f(X(v.x))}" y1="${p.t - 2}" y2="${f(h - p.b)}"/>`; if (v.label) s += `<text class="ch-note" x="${f(X(v.x) + (v.anchor === 'end' ? -5 : 5))}" y="${v.low ? h - p.b - 9 : p.t + 6}" text-anchor="${v.anchor || 'start'}">${esc(v.label)}</text>`; });
+  (o.series || []).forEach(se => {
+    if (!se.pts || se.pts.length < 2) return;
+    const d = path(se.pts);
+    if (se.split) s += `<path class="ch-line" d="${d}" clip-path="url(#${o.id}-lo)"/><path class="ch-line hi" d="${d}" clip-path="url(#${o.id}-hi)"/>`;
+    else s += `<path class="ch-line ${se.cls || ''}" d="${d}"/>`;
+  });
+  (o.dots || []).forEach(dt => {
+    const cx = f(X(dt.x)), cy = f(Y(dt.y));
+    if (dt.halo) s += `<circle class="ch-halo ${dt.cls || ''}" cx="${cx}" cy="${cy}" r="9"/>`;
+    if (dt.num) s += `<circle class="ch-num" cx="${cx}" cy="${cy}" r="8.5"/><text class="ch-numt" x="${cx}" y="${f(Y(dt.y) + 3.5)}" text-anchor="middle">${dt.num}</text>`;
+    else s += `<circle class="ch-dot ${dt.cls || ''}" cx="${cx}" cy="${cy}" r="${dt.r || 4.5}"/>`;
+    if (dt.text) s += `<text class="${dt.textCls || 'ch-val'}" x="${f(X(dt.x) + (dt.dx || 0))}" y="${f(Y(dt.y) + (dt.dy === undefined ? -9 : dt.dy))}" text-anchor="${dt.anchor || 'middle'}">${esc(dt.text)}</text>`;
+  });
+  return s + '</svg>';
+}
+
+/* ---------- Phone parts ---------- */
+function phoneFrame(inner, id) {
+  return `<div class="phone-wrap"><div class="device"><div class="screen" id="${id}">
+    <div class="statusbar"><span data-r="clock"></span><span class="island"></span><span class="sb-icons">${ICON.signal}${ICON.wifi}${ICON.battery}</span></div>
+    ${inner}
+    <div class="home-ind"></div></div></div></div>`;
+}
+function homeView(P, o = {}) {
+  const segs = Array.from({ length: P.cartridge.total }, (_, i) => `<i class="${i < P.cartridge.day ? 'on' : ''}"></i>`).join('');
+  return `<div class="view home" data-r="home">
+    <div class="app-head"><div><div class="app-date">${esc(P.home.date)}</div><div class="app-title">${esc(P.home.title)}</div></div>${o.headCart ? `<div class="hcart"><span>${esc(P.cartridge.label)}</span><b>${esc(tpl(P.cartridge.text, P.cartridge))}</b><div class="segs">${segs}</div></div>` : `<div class="avatar">${esc(P.home.initials)}</div>`}</div>
+    <div class="card"><div class="gl-top"><span class="c-label">${esc(P.home.glucoseLabel)}</span><span class="pill" data-r="status"></span></div>
+      <div class="gl-main"><span class="gl-num" data-r="g"></span><span class="gl-unit">${esc(P.home.unit)}</span><span class="gl-arrow" data-r="arrow">${ICON.arrow}</span></div>
+      <div class="gl-note">${esc(P.home.sensorNote)}</div></div>
+    <div class="card"><div class="ch-head"><b data-r="chTitle"></b><span>${esc(P.home.target)}</span></div><div data-r="chart"></div></div>
+    ${o.slot ? '<button type="button" class="card slot" data-r="slot"></button>' : ''}
+    ${o.headCart ? '' : `<div class="card cart"><b>${esc(P.cartridge.label)}</b><span>${esc(tpl(P.cartridge.text, P.cartridge))}</span><div class="segs">${segs}</div></div>`}
+  </div>`;
+}
+function tabBar(P, active = 0) {
+  return `<div class="tabbar" data-r="tabs">${P.tabs.map((t, i) => `<div class="${i === active ? 'on' : ''}">${ICON.tabs[i]}<span>${esc(t)}</span></div>`).join('')}</div>`;
+}
+function permissionAlert(P) {
+  return `<div class="scrim" data-r="scrim"><div class="ios-alert" role="alertdialog" aria-label="${esc(P.permission.title)}"><div class="tx"><b>${esc(P.permission.title)}</b><p>${esc(P.permission.text)}</p></div><div class="bt"><button type="button" data-act="deny">${esc(P.permission.deny)}</button><button type="button" data-act="allow">${esc(P.permission.allow)}</button></div></div></div>`;
+}
+function pushBanner(P) {
+  return `<div class="banner" data-r="banner" role="status"><span class="app-ico"></span><div><div class="hd"><b>${esc(P.push.app)}</b><span>${esc(P.push.when)}</span></div><p>${esc(P.push.text)}</p></div></div>`;
+}
+function slotHTML(c) {
+  const right = c.big ? `<span class="big">${esc(c.big)}<small>${esc(c.bigSub || '')}</small></span>` : (c.chev ? `<span class="chev">${ICON.chev}</span>` : '<span></span>');
+  return `<span class="ico">${ICON[c.icon] || ''}</span><span><b>${esc(c.title)}</b><p>${esc(c.text)}</p></span>${right}${c.progress !== undefined ? `<span class="bar"><i style="width:${(c.progress * 100).toFixed(1)}%"></i></span>` : ''}`;
+}
+/* Updates the live parts of a home screen. */
+function updateHome(root, v) {
+  setText($('[data-r="clock"]', root), v.clock);
+  const g = Math.round(v.g), num = $('[data-r="g"]', root), st = $('[data-r="status"]', root);
+  setText(num, g);
+  num.classList.toggle('hi', g > v.band[1]);
+  setText(st, g > v.band[1] ? v.words.above : g < v.band[0] ? v.words.below : v.words.inRange);
+  st.classList.toggle('warn', g > v.band[1] || g < v.band[0]);
+  const ang = v.slope > 1.2 ? -90 : v.slope > 0.35 ? -45 : v.slope < -1.2 ? 90 : v.slope < -0.35 ? 45 : 0;
+  $('[data-r="arrow"] svg', root).style.transform = `rotate(${ang}deg)`;
+  setText($('[data-r="chTitle"]', root), v.chartTitle);
+  setHTML($('[data-r="chart"]', root), v.chart);
+}
+
+/* ---------- Impact model ---------- */
+function sampleSize(p1, p2, z) {
+  const d = p2 - p1;
+  if (Math.abs(d) < 1e-9) return Infinity;
+  return Math.pow(z.alpha + z.power, 2) * (p1 * (1 - p1) + p2 * (1 - p2)) / (d * d);
+}
+function computeModel(v, z) {
+  const extra = Math.max(0, v.walkPush - v.walkAnyway);
+  const reach = v.reach === undefined ? 1 : v.reach;
+  const moved = (1 - v.onTrack) * reach * v.allow * extra * v.become;
+  const onTest = v.onTrack + moved;
+  const m3c = v.onTrack * v.retOn + (1 - v.onTrack) * v.retOff;
+  const m3t = onTest * v.retOn + (1 - onTest) * v.retOff;
+  return { extra, moved, onTest, m3c, m3t, nOn: sampleSize(v.onTrack, onTest, z), nM3: sampleSize(m3c, m3t, z) };
+}
+const approxN = n => { if (!isFinite(n)) return 'n/a'; const u = n >= 100000 ? 10000 : n >= 20000 ? 1000 : n >= 1000 ? 100 : 10; return '~' + fmtInt(Math.round(n / u) * u); };
+
+(function () {
+  const C = CONFIG, P = C.phone, G = C.glucose, S = C.sim, T = C.trigger, W = P.week, F = C.funnel, M = C.model;
+  const L0 = G.lunchStartMin, END = S.minutes, GROUPS = ['test', 'control'];
+  const STEPS = F.steps, LAST = STEPS.length - 1;
+  // Phone chapter behind each funnel step: 0 home, 1 value screen, 2 iOS prompt, 3 lunch, 4 week summary.
+  const CH = { off: 0, allow: 1, walk: 3, on: 4, keep: 4, ltv: 4 };
+  document.title = C.doc.title;
+
+  /* ---------- Simulated curves ---------- */
+  const gMorning = pchip(G.morning);
+  const gNo = pchip(G.lunchNoWalk);
+  // The trigger is not hard-coded: the rule from CONFIG.trigger runs on the curve.
+  const trig = (() => {
+    for (let t = 0; t <= END; t += 0.5) {
+      let mn = Infinity;
+      for (let u = Math.max(0, t - T.windowMin); u <= t; u += 0.5) mn = Math.min(mn, gNo(u));
+      if (gNo(t) - mn >= T.rise - 1e-6) return t;
+    }
+    return END;
+  })();
+  const walkStart = trig + S.walkStartAfterTriggerMin, walkEnd = walkStart + S.walkMinutes;
+  const slope0 = (gNo(walkStart + 0.05) - gNo(walkStart - 0.05)) / 0.1;
+  const gTail = pchip([[walkStart, gNo(walkStart)]].concat(G.lunchWalkAfter), slope0);
+  const gWalk = t => (t <= walkStart ? gNo(t) : gTail(t));
+  const curve = w => (w ? gWalk : gNo);
+  const stats = fn => {
+    let pk = -1, pt = 0;
+    for (let t = 0; t <= END; t += 0.25) { const g = fn(t); if (g > pk) { pk = g; pt = t; } }
+    return { peak: Math.round(pk), peakT: pt };
+  };
+  const ST = { walk: stats(gWalk), no: stats(gNo) };
+  const dipT = (() => { for (let t = ST.no.peakT; t <= END; t += 0.5) if (gNo(t) <= G.dipCardBelow) return t; return END; })();
+  const steps = (w, t) => Math.round(w ? clamp((t - walkStart) / S.walkMinutes, 0, 1) * S.walkSteps : clamp((t - trig) / T.walkedWindowMin, 0, 1) * S.idleSteps);
+  const morningPts = sample(gMorning, G.morning[0][0], L0, 3);
+  const preLunchPts = sample(gMorning, L0 - 60, L0, 3);
+
+  /* ---------- State ---------- */
+  const st = { step: 0, ch: 0, t: 0, playing: false, allow: null, walk: { test: true, control: false }, view: 'test', open: false };
+  const mv = {}; M.inputs.forEach(i => { mv[i.key] = i.value; });
+  const inputOf = key => M.inputs.find(i => i.key === key);
+  const allowed = () => st.allow !== false;
+  const effT = () => (st.ch < 3 ? 0 : st.ch === 4 ? END : st.t);
+  const wide = () => document.documentElement.clientWidth >= 1200;
+  const model = () => { const v = {}; Object.keys(mv).forEach(k => { v[k] = mv[k] / 100; }); v.onTrack = 1 - v.offTrack; v.price = mv.price; v.months = mv.months; return Object.assign(computeModel(v, M.z), { v }); };
+
+  /* ---------- Static markup ---------- */
+  function diagramSVG() {
+    const fn = pchip([[0, 62], [44, 62], [104, 14], [150, 56], [192, 92], [224, 86], [266, 50], [322, 60]]);
+    const d = sample(fn, 0, 322, 3).map((q, i) => (i ? 'L' : 'M') + q[0] + ' ' + q[1].toFixed(1)).join('');
+    const pin = (x, y, n) => `<circle class="ch-num" cx="${x}" cy="${y}" r="8.5"/><text class="ch-numt" x="${x}" y="${y + 3.5}" text-anchor="middle">${n}</text>`;
+    return `<svg viewBox="0 0 322 108" width="100%" style="display:block;overflow:visible" aria-hidden="true">
+      <defs><clipPath id="dg-hi"><rect x="0" y="-10" width="322" height="50"/></clipPath><clipPath id="dg-lo"><rect x="0" y="40" width="322" height="80"/></clipPath></defs>
+      <line class="ch-edge" x1="0" x2="322" y1="62" y2="62"/>
+      <path class="ch-line" d="${d}" clip-path="url(#dg-lo)"/><path class="ch-line hi" d="${d}" clip-path="url(#dg-hi)"/>
+      ${pin(104, 14, 1)}${pin(192, 92, 2)}${pin(226, 86, 3)}${pin(266, 50, 4)}</svg>`;
+  }
+  function valueSheet() {
+    const V = P.value;
+    return `<div class="sheet" data-r="sheet">
+      <button type="button" class="sheet-x" data-act="close" aria-label="${esc(V.close)}">${ICON.x}</button>
+      <div class="eb">${esc(V.eyebrow)}</div><h3>${esc(V.title)}</h3><p class="lead">${esc(V.lead)}</p>
+      <div class="dia">${diagramSVG()}<div class="chain">${V.chain.map((c, i) => `${i ? '<em>→</em>' : ''}<span><i>${i + 1}</i>${esc(c)}</span>`).join('')}</div></div>
+      <ul class="facts">${V.facts.map(f => `<li><b>${esc(f.num)}</b><span>${esc(f.text)}</span></li>`).join('')}</ul>
+      <div class="promise">${ICON.bell}<span>${esc(V.promise)}</span></div>
+      <button type="button" class="cta" data-act="cta">${esc(V.cta)}</button><button type="button" class="later" data-act="close">${esc(V.later)}</button></div>`;
+  }
+  function pcolHTML(group) {
+    const test = group === 'test';
+    const inner = homeView(P, { slot: test, headCart: true }) + '<div class="view week" data-r="week" hidden></div>' + tabBar(P) + (test ? valueSheet() + permissionAlert(P) + pushBanner(P) : '');
+    return `<div class="pcol ${group}" data-group="${group}">${phoneFrame(inner, 'ph-' + group)}</div>`;
+  }
+  function ideaHTML(I) {
+    const term = `<span class="term-w"><button type="button" class="term" data-act="term" aria-expanded="false">${esc(I.term.text)}</button><span class="term-pop" role="tooltip">${esc(I.term.def)}</span></span>`;
+    return esc(I.idea).replace('{term}', term).replace('{ratio}', '<span data-r="ratio"></span>');
+  }
+  function asmHTML(a) {
+    const i = inputOf(a.key), money = i.unit === '$', unit = money ? '' : i.unit === 'mo' ? '&nbsp;mo' : '%';
+    return `<div class="asm" data-key="${i.key}"><label class="num">${money ? '$' : ''}<input id="in-${i.key}" type="number" inputmode="numeric" min="${i.min}" max="${i.max}" step="1" value="${i.value}" aria-label="${esc(i.label)}, ${esc(C.labels.assumption.toLowerCase())}">${unit}</label><span class="al">${esc(a.label)}</span>
+      <input class="rng" type="range" min="${i.min}" max="${i.max}" step="1" value="${i.value}" aria-label="${esc(i.label)}"></div>`;
+  }
+  function stepHTML(s, i) {
+    const money = i === LAST;
+    return `<li class="fstep s-${s.id}" data-step="${i}">
+      ${money ? '<p class="fsub" data-r="ltvN"></p>' : '<svg class="fshape" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path class="con"/><path class="blk"/></svg>'}
+      <div class="fcard"><button type="button" class="fhit" data-go="${i}"><b class="fnum"></b><span class="flab">${esc(s.label)}</span></button>
+        ${money ? '' : '<span class="hbar" aria-hidden="true"><i></i></span>'}${s.inputs.map(asmHTML).join('')}</div></li>`;
+  }
+  function heroHTML() {
+    const I = C.intro;
+    return `<div class="fmain">
+      <h1>${esc(I.title)}</h1><p class="idea">${ideaHTML(I)}</p>
+      <div class="fhead"><h2>${esc(F.head)}</h2><p class="legend"><span><i></i>${esc(F.legend)}</span><button type="button" class="lnk" data-act="model-reset" hidden>${esc(F.reset)}</button></p></div>
+      <ol class="funnel">${STEPS.map(stepHTML).join('')}</ol>
+      <div class="below"><p class="detail" data-r="detail"></p><div class="act"><button type="button" class="btn primary big" data-act="main" data-r="main"></button></div></div>
+    </div>
+    <div class="duo">
+      <div class="seg viewsw" role="group" aria-label="${esc(F.viewLabel)}">${GROUPS.map(g => `<button type="button" data-view="${g}">${esc(C.groups[g].name)}</button>`).join('')}</div>
+      <div class="phones">${pcolHTML('test')}${pcolHTML('control')}</div>
+      <p class="act-note">${esc(C.labels.simulatedNote)}</p></div>`;
+  }
+  function experimentHTML() {
+    const E = C.experiment;
+    const dl = b => `<div class="panel"><h3>${esc(b.title)}</h3><dl class="spec">${b.rows.map(r => `<div><dt>${esc(r[0])}</dt><dd>${esc(r[1])}</dd></div>`).join('')}</dl></div>`;
+    return `<div class="wrap">
+      <div class="sec-head"><div><h2>${esc(E.title)}</h2></div><p>${esc(E.lede)}</p></div>
+      <div class="hyp"><p class="say">${E.hypothesis}</p>
+        <ul class="evid">${E.evidence.map(e => `<li><b>${esc(e.num)}</b><p>${esc(e.text)} <a href="${esc(e.href)}" target="_blank" rel="noopener">${esc(e.src)}</a></p></li>`).join('')}</ul></div>
+      <ol class="tl">${E.timeline.map(t => `<li class="${t.key ? 'key' : ''}"><b>${esc(t.day)}</b><span>${esc(t.text)}</span></li>`).join('')}</ol>
+      <div class="g3">${dl(E.who)}${dl(E.rule)}
+        <div class="panel"><h3>${esc(E.metrics.title)}</h3><ul class="metrics">${E.metrics.rows.map(m => `<li class="${m.cls || ''}"><span class="role">${esc(m.role)}</span><span>${esc(m.text)}</span></li>`).join('')}</ul></div></div>
+      <div class="rules-h"><span>${esc(E.decision.title)}</span><span class="tag">${esc(E.decision.note)}</span></div>
+      <div class="rules">${E.decision.rules.map(r => `<div class="rule ${r.cls}"><b>${esc(r.name)}</b><p><span>${esc(E.decision.whenLabel)}</span>${esc(r.when)}</p><p><span>${esc(E.decision.thenLabel)}</span>${esc(r.then)}</p></div>`).join('')}</div>
+    </div>`;
+  }
+  function resultHTML() {
+    const O = M.out;
+    const cmp = (k, lab) => `<div class="panel"><div class="lab">${esc(lab)}</div><div class="big" data-r="${k}Big"></div><div class="dl" data-r="${k}Dl"></div>
+      <div class="bars" aria-hidden="true"><div><i data-r="${k}B0"></i></div><div><i data-r="${k}B1"></i></div></div><div class="n" data-r="${k}N"></div></div>`;
+    return `<div class="wrap">
+      <div class="sec-head"><div><h2>${esc(M.title)}</h2></div><p>${esc(M.lede)}</p></div>
+      <div class="cmp">${cmp('on', O.onTrack)}${cmp('m3', O.m3)}</div>
+      <div class="verdict" data-r="verdict"></div>
+      <details class="panel fx"><summary><h3><span>${esc(M.formulasTitle)}</span><span class="tag">${esc(M.powerText)}</span></h3></summary><ol>${M.formulas.map((f, i) => `<li><span>${i + 1}. ${esc(f.name)}</span><code data-f="${i}"></code></li>`).join('')}</ol></details>
+    </div>`;
+  }
+  function build() {
+    $('#top').innerHTML = `<a class="mark" href="#flow"><i></i>${esc(C.brand)} <span>${esc(C.top.sub)}</span></a><nav class="topnav">${C.top.nav.map(n => `<a href="${n.href}">${esc(n.label)}</a>`).join('')}</nav>`;
+    $('#flow').innerHTML = heroHTML();
+    $('#model').innerHTML = resultHTML();
+    $('#experiment').innerHTML = experimentHTML();
+    $('#foot').innerHTML = `<div class="wrap">${C.foot.map(f => `<span>${esc(f)}</span>`).join('')}</div>`;
+  }
+
+  /* ---------- Render: phones ---------- */
+  function slotState(tt) {
+    const K = P.cards;
+    if (st.ch < 3) return K.offer;
+    if (!allowed()) return K.off;
+    if (st.walk.test) {
+      if (tt >= walkEnd + 4 || st.ch === 4) return Object.assign({}, K.walked, { text: tpl(K.walked.text, { peak: ST.walk.peak, usual: ST.no.peak }), big: fmtInt(S.walkSteps) });
+      if (tt >= walkStart) return Object.assign({}, K.walking, { title: tpl(K.walking.title, { min: Math.min(S.walkMinutes, Math.floor(tt - walkStart)), total: S.walkMinutes }), big: fmtInt(steps(true, tt)), progress: clamp((tt - walkStart) / S.walkMinutes, 0, 1) });
+      return K.on;
+    }
+    return tt >= dipT ? K.dip : K.on;
+  }
+  function weekHTML(group) {
+    const t = W.t, w = st.walk[group], ws = w ? W.weights.walk : W.weights.noWalk;
+    const delta = ws[ws.length - 1] - ws[0], pace = W.startWeightKg * W.onTrackPctPerWeek / 100, onTrack = -delta >= pace - 1e-9;
+    const lo = Math.min.apply(null, W.weights.walk) - 0.1, hi = W.startWeightKg + 0.1;
+    const pts = ws.map((v, i) => [10 + i * (306 / (ws.length - 1)), 6 + (hi - v) / (hi - lo) * 34]);
+    const spark = `<svg viewBox="0 0 326 58" width="100%" style="display:block;margin-top:6px" aria-hidden="true"><path class="ch-line" d="${pts.map((q, i) => (i ? 'L' : 'M') + q[0].toFixed(1) + ' ' + q[1].toFixed(1)).join('')}"/>${pts.map(q => `<circle class="ch-dot" cx="${q[0].toFixed(1)}" cy="${q[1].toFixed(1)}" r="3.5"/>`).join('')}<text class="ch-tick" x="10" y="56">${ws[0].toFixed(1)} kg</text><text class="ch-tick" x="316" y="56" text-anchor="end">${ws[ws.length - 1].toFixed(1)} kg</text></svg>`;
+    // On the retention and LTV steps the weight trend is the card that matters.
+    const weight = `<div class="card${st.step >= 4 ? ' focus' : ''}"><div class="gl-top"><span class="c-label">${esc(t.weight)}</span>${group === 'test' ? `<span class="pill ${onTrack ? '' : 'warn'}">${esc(onTrack ? t.onTrack : t.below)}</span>` : ''}</div>
+      <div class="wk-big">${delta.toFixed(1).replace('-', '−')} <small>${esc(t.thisWeek)}</small></div>${spark}${group === 'test' ? `<div class="wk-sub">${esc(tpl(t.pace, { pace: pace.toFixed(2) }))}</div>` : ''}</div>`;
+    const head = `<div class="app-head"><div><div class="app-date">${esc(W.range)}</div><div class="app-title">${esc(W.title)}</div></div></div>`;
+    const bar = (label, v, cls) => `<div class="wk-bar ${cls || ''}"><span>${esc(label)}</span><span class="tr"><i style="width:${clamp((v - 90) / 80 * 100, 4, 100).toFixed(0)}%"></i></span><b>${v} ${esc(G.unit)}</b></div>`;
+    let body;
+    if (group === 'test') {
+      const n = w ? W.spikes.walkedIfWalks : 0;
+      body = `<div class="card"><div class="c-label">${esc(t.walkedOff)}</div><div class="wk-big">${n} <small>${esc(tpl(t.of, { total: W.spikes.total }))}</small></div>
+          <div class="wk-dots">${Array.from({ length: W.spikes.total }, (_, i) => `<i class="${i < n ? 'on' : ''}"></i>`).join('')}</div></div>
+        <div class="card"><div class="c-label">${esc(t.avgSpike)}</div>${w ? bar(t.walkDays, W.spikes.avgWalkDays) + bar(t.otherDays, W.spikes.avgOtherDays, 'other') : bar(t.allDays, W.spikes.avgNoWalks, 'other') + `<div class="wk-sub">${esc(t.noWalks)}</div>`}</div>`;
+    } else {
+      body = `<div class="card"><div class="c-label">${esc(t.avgGlucose)}</div><div class="wk-big">${W.standard.avgGlucose} <small>${esc(G.unit)}</small></div></div>
+        <div class="card"><div class="c-label">${esc(t.tir)}</div><div class="wk-big">${W.standard.timeInRange}<small>%</small></div><div class="wk-bar" style="grid-template-columns:1fr"><span class="tr"><i style="width:${W.standard.timeInRange}%"></i></span></div><div class="wk-sub">${esc(t.tirSub)}</div></div>`;
+    }
+    return head + body + weight;
+  }
+  const phones = {};
+  function renderPhone(group) {
+    const root = phones[group], w = st.walk[group], fn = curve(w), tt = effT(), lunch = st.ch >= 3;
+    const g = lunch ? fn(tt) : gMorning(L0);
+    const slope = lunch ? (fn(Math.min(END, tt + 1)) - fn(Math.max(0, tt - 1))) / (Math.min(END, tt + 1) - Math.max(0, tt - 1)) : 0;
+    const hi = g > G.band[1];
+    const chart = lunch
+      ? chartSVG({ id: 'pc-' + group, w: 326, h: 150, x: [L0 - 60, L0 + END], y: [58, 172], band: G.band,
+          xticks: [-30, 30, 90].map(m => ({ x: L0 + m, label: clock(L0 + m) })),
+          series: [{ pts: preLunchPts.concat(sample(fn, 0, Math.max(tt, 0.01), 0.5).map(q => [L0 + q[0], q[1]])), split: true }],
+          dots: [{ x: L0 + tt, y: g, halo: true, cls: hi ? 'hi' : '' }] })
+      : chartSVG({ id: 'pc-' + group, w: 326, h: 150, x: [G.morning[0][0], L0], y: [58, 172], band: G.band,
+          xticks: [360, 480, 600, 720].map(m => ({ x: m, label: clock(m), anchor: m === 360 ? 'start' : 'middle' })),
+          series: [{ pts: morningPts, split: true }], dots: [{ x: L0, y: g, halo: true }] });
+    updateHome(root, { clock: st.ch === 4 ? W.clock : clock(L0 + tt), g, slope, band: G.band, words: P.home.words, chartTitle: lunch ? P.home.chartLunch : P.home.chartDay, chart });
+    $('[data-r="home"]', root).hidden = st.ch === 4;
+    const wk = $('[data-r="week"]', root);
+    wk.hidden = st.ch !== 4;
+    if (st.ch === 4) setHTML(wk, weekHTML(group));
+    $$('[data-r="tabs"] div', root).forEach((d, i) => d.classList.toggle('on', i === (st.ch === 4 ? 1 : 0)));
+    if (group === 'test') {
+      const c = slotState(tt), slot = $('[data-r="slot"]', root);
+      setHTML(slot, slotHTML(c));
+      slot.classList.toggle('amber', !!c.amber);
+      $('[data-r="sheet"]', root).classList.toggle('open', st.ch === 1 || st.ch === 2);
+      $('[data-r="scrim"]', root).classList.toggle('open', st.ch === 2);
+      $('[data-r="banner"]', root).classList.toggle('show', st.ch === 3 && allowed() && tt >= trig && tt < trig + S.bannerMinutes);
+    }
+  }
+
+  /* ---------- Render: selected step, its text and the one primary action ---------- */
+  const noteOf = key => tpl(inputOf(key).note || '', { gap: '+' + Math.round(mv.retOn - mv.retOff) });
+  function renderStep() {
+    const stage = $('#flow'), s = STEPS[st.step], perm = st.ch === 2;
+    stage.dataset.step = s.id; stage.dataset.view = st.view; stage.dataset.open = st.open ? '1' : '0';
+    $$('.fstep').forEach((li, i) => { li.classList.toggle('sel', i === st.step); $('.fhit', li).setAttribute('aria-current', i === st.step ? 'step' : 'false'); });
+    const notes = {}; s.inputs.forEach(a => { notes[a.key] = noteOf(a.key); });
+    setText($('[data-r="detail"]'), tpl(perm ? s.textPerm : s.text, notes));
+    const main = s.id === 'walk' ? (st.playing ? s.pause : st.t >= END ? s.next : s.play) : perm ? s.nextPerm : s.next;
+    setText($('[data-r="main"]'), main);
+    $('[data-r="main"]').classList.toggle('playing', st.playing);
+    $$('[data-view]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.view === st.view)));
+  }
+  function render() { renderStep(); GROUPS.forEach(renderPhone); }
+
+  /* ---------- Render: funnel numbers and expected result ---------- */
+  function renderModel() {
+    const O = M.out, m = model(), v = m.v, p1 = x => pct(x, 1), p0 = x => pct(x, 0);
+    const pp = x => (x * 100).toFixed(1);
+    const sign = x => (x < 0 ? '−' : '+');
+    const usd = x => sign(x) + '$' + (Math.abs(x) < 10 ? Math.abs(x).toFixed(1) : fmtInt(Math.abs(x)));
+    const usdK = x => sign(x) + '$' + (Math.abs(x) >= 1e6 ? (Math.abs(x) / 1e6).toFixed(1) + 'M' : fmtInt(Math.abs(x) / 1000) + 'K');
+    const dRet = m.m3t - m.m3c, rev = dRet * v.months * v.price, gp = rev * v.margin;
+    const notOn = 1 - v.onTrack;
+
+    // Funnel: users per 1,000 at each step, then money per new user.
+    const share = [notOn, notOn * v.allow, notOn * v.allow * m.extra, m.moved, Math.abs(dRet)];
+    const nums = share.slice(0, 4).map(x => fmtInt(x * 1000)).concat([sign(dRet) + (Math.abs(dRet) * 1000).toFixed(0), usd(gp)]);
+    const hh = share.map(x => clamp(x * 100, 1.6, 100));
+    $$('.fstep').forEach((li, k) => {
+      setText($('.fnum', li), nums[k]);
+      if (k === LAST) return;
+      const a = hh[k], b = k < LAST - 1 ? hh[k + 1] : a, y0 = (50 - a / 2).toFixed(2), y1 = (50 + a / 2).toFixed(2), z0 = (50 - b / 2).toFixed(2), z1 = (50 + b / 2).toFixed(2);
+      $('.blk', li).setAttribute('d', `M0 ${y0}H58V${y1}H0Z`);
+      $('.con', li).setAttribute('d', `M58 ${y0}C80 ${y0} 80 ${z0} 100 ${z0}V${z1}C80 ${z1} 80 ${y1} 58 ${y1}Z`);
+      $('.hbar i', li).style.width = clamp(share[k] * 100, 0.6, 100).toFixed(2) + '%';
+    });
+    setHTML($('[data-r="ltvN"]'), tpl(F.per10k, { rev10: usdK(rev * 10000), gp10: usdK(gp * 10000) }));
+    setText($('[data-r="ratio"]'), v.retOff > 0 ? (v.retOn / v.retOff).toFixed(1) : 'n/a');
+
+    // Expected result
+    const arrow = (a, b) => `<span class="from">${a}</span><i>→</i>${b}`;
+    setHTML($('[data-r="onBig"]'), arrow(p1(v.onTrack), p1(m.onTest)));
+    setHTML($('[data-r="m3Big"]'), arrow(p1(m.m3c), p1(m.m3t)));
+    setText($('[data-r="onDl"]'), `+${pp(m.moved)} pp · ${O.control} vs ${O.test}`);
+    setText($('[data-r="m3Dl"]'), `${sign(dRet)}${pp(Math.abs(dRet))} pp · ${O.control} vs ${O.test}`);
+    const w = x => clamp(x / 0.6 * 100, 0, 100).toFixed(1) + '%';
+    $('[data-r="onB0"]').style.width = w(v.onTrack); $('[data-r="onB1"]').style.width = w(m.onTest);
+    $('[data-r="m3B0"]').style.width = w(m.m3c); $('[data-r="m3B1"]').style.width = w(m.m3t);
+    setHTML($('[data-r="onN"]'), tpl(O.nOn, { n: approxN(m.nOn) }));
+    setHTML($('[data-r="m3N"]'), tpl(O.nM3, { n: approxN(m.nM3) }));
+    const ok = m.moved * 100 >= M.shipThresholdPp - 1e-9, vd = $('[data-r="verdict"]');
+    setText(vd, tpl(ok ? O.shipYes : O.shipNo, { lift: '+' + pp(m.moved) })); vd.classList.toggle('no', !ok);
+    const vars = { offTrack: p0(v.offTrack), walkPush: p0(v.walkPush), walkAnyway: p0(v.walkAnyway), extra: p0(m.extra), onTrack: p0(v.onTrack), onTrack1: p1(v.onTrack), allow: p0(v.allow), become: p0(v.become), moved: pp(m.moved), onTest: p1(m.onTest), retOn: p0(v.retOn), retOff: p0(v.retOff), m3c: p1(m.m3c), m3t: p1(m.m3t), nOn: approxN(m.nOn), nM3: approxN(m.nM3), dRet: pp(dRet), months: fmtInt(v.months), price: fmtInt(v.price), margin: p0(v.margin), ltv: usd(gp) };
+    M.formulas.forEach((f, i) => setHTML($(`[data-f="${i}"]`), tpl(f.expr, vars)));
+
+    // Inputs
+    let dirty = false;
+    M.inputs.forEach(i => {
+      const row = $(`.asm[data-key="${i.key}"]`), r = $('.rng', row), n = $('input[type="number"]', row);
+      if (document.activeElement !== n) n.value = mv[i.key];
+      r.value = mv[i.key]; r.style.setProperty('--p', ((mv[i.key] - i.min) / (i.max - i.min) * 100).toFixed(1) + '%');
+      if (mv[i.key] !== i.value) dirty = true;
+    });
+    $('[data-act="model-reset"]').hidden = !dirty;
+    renderStep();
+  }
+
+  /* ---------- Player and navigation ---------- */
+  let raf = 0, last = 0;
+  function tick() {
+    if (!st.playing) return;
+    const now = performance.now(), dt = clamp(now - last, 0, 64); last = now;
+    st.t = Math.min(END, st.t + dt / 1000 * END / S.durationSec);
+    if (st.t >= END) st.playing = false;
+    render();
+    if (st.playing) raf = requestAnimationFrame(tick);
+  }
+  function play() { if (st.t >= END) st.t = 0; st.playing = true; last = performance.now(); cancelAnimationFrame(raf); raf = requestAnimationFrame(tick); render(); }
+  function pause() { st.playing = false; cancelAnimationFrame(raf); }
+  // Wide: text and button sit under the funnel, the phone beside it.
+  // Narrow: text and phone open inside the selected step, the button sticks to the bottom of the stage.
+  function place() {
+    const stage = $('#flow'), li = $$('.fstep')[st.step], below = $('.below'), w = wide();
+    const put = (el, parent) => { if (el.parentNode !== parent) parent.appendChild(el); };
+    stage.dataset.mode = w ? 'wide' : 'narrow';
+    put($('.detail'), w ? below : li);
+    put($('.act'), w ? below : stage);
+    put($('.duo'), w ? stage : li);
+  }
+  function go(step, o = {}) {
+    step = clamp(step, 0, LAST); pause();
+    const id = STEPS[step].id;
+    if (step <= 1) { st.allow = null; st.walk.test = true; } else if (st.allow === null) st.allow = true;
+    st.step = step; st.ch = CH[id] + (id === 'allow' && o.perm ? 1 : 0);
+    if (o.user) st.open = true;
+    place();
+    if (id === 'walk') { st.t = o.t === undefined ? 0 : o.t; if (o.t === undefined) play(); else render(); }
+    else render();
+    if (o.user && !wide()) $$('.fstep')[step].scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  function fit() {
+    const stage = $('#flow'), vw = document.documentElement.clientWidth, vh = window.innerHeight;
+    const s = vw >= 1200 ? clamp((vh - 56 - 22 - 38 - 12 - 12 - 22 - 20) / 866, 0.6, 0.86) : Math.min(0.84, (Math.min(vw, 672) - 32) / 412);
+    stage.style.setProperty('--s', s.toFixed(4));
+  }
+
+  /* ---------- Wire up ---------- */
+  build();
+  GROUPS.forEach(g => { phones[g] = $('#ph-' + g); });
+  const U = { user: true };
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.term-w')) $$('.term-w.open').forEach(w => { w.classList.remove('open'); $('.term', w).setAttribute('aria-expanded', 'false'); });
+    if (e.target.closest('.asm')) return;
+    const card = e.target.closest('.fcard');
+    if (card) return go(+card.parentNode.dataset.step, U);
+    const b = e.target.closest('button,[data-act]'); if (!b) return;
+    if (b.dataset.view) { st.view = b.dataset.view; return render(); }
+    if (b.dataset.r === 'slot') { if (st.ch === 0) go(1, U); return; }
+    switch (b.dataset.act) {
+      case 'main': {
+        const id = STEPS[st.step].id;
+        if (id === 'allow' && st.ch === 1) go(1, { perm: true, user: true });
+        else if (id === 'allow') { st.allow = true; go(2, U); }
+        else if (id === 'walk') { st.open = true; if (st.playing) { pause(); render(); } else if (st.t >= END) go(3, U); else play(); }
+        else if (st.step === LAST) $('#model').scrollIntoView({ behavior: 'smooth' });
+        else go(st.step + 1, U);
+        break;
+      }
+      case 'cta': go(1, { perm: true, user: true }); break;
+      case 'close': go(0, U); break;
+      case 'allow': st.allow = true; go(2, U); break;
+      case 'deny': st.allow = false; st.walk.test = false; go(2, U); break;
+      case 'term': { const w = b.closest('.term-w'), open = !w.classList.contains('open'); w.classList.toggle('open', open); b.setAttribute('aria-expanded', String(open)); break; }
+      case 'model-reset': M.inputs.forEach(i => { mv[i.key] = i.value; }); renderModel(); break;
+    }
+  });
+  $('#flow').addEventListener('input', e => {
+    const row = e.target.closest('.asm'); if (!row) return;
+    const i = inputOf(row.dataset.key), val = parseFloat(e.target.value);
+    if (isNaN(val)) return;
+    mv[i.key] = clamp(val, i.min, i.max); renderModel();
+  });
+  $('#flow').addEventListener('change', e => { if (e.target.closest('.asm')) { e.target.blur(); renderModel(); } });
+  document.addEventListener('keydown', e => {
+    if (!e.target.closest || e.target.closest('input,textarea,select') || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.key === 'ArrowRight') { if (st.step < LAST) go(st.step + 1, U); }
+    else if (e.key === 'ArrowLeft') { if (st.step > 0) go(st.step - 1, U); }
+  });
+  let wasWide = wide();
+  window.addEventListener('resize', () => { fit(); if (wide() !== wasWide) { wasWide = wide(); place(); } });
+
+  // Deep link for review and screenshots: #s=walk&t=40&view=control, #s=allow&perm=1, #s=walk&allow=0, #v=allow:50,price:150
+  const h = new URLSearchParams(location.hash.slice(1));
+  (h.get('v') || '').split(',').forEach(kv => { const [k, x] = kv.split(':'), i = inputOf(k); if (i && !isNaN(+x)) mv[k] = clamp(+x, i.min, i.max); });
+  if (h.get('view')) st.view = h.get('view') === 'control' ? 'control' : 'test';
+  fit(); renderModel();
+  const si = STEPS.findIndex(s => s.id === h.get('s'));
+  if (si >= 0) {
+    st.open = true;
+    if (h.get('allow') === '0' && si >= 2) { st.allow = false; st.walk.test = false; }
+    go(si, { perm: h.get('perm') === '1', t: h.get('t') === null ? (STEPS[si].id === 'walk' && !h.get('play') ? END : undefined) : clamp(+h.get('t'), 0, END) });
+  } else { place(); render(); }
+})();
+
+</script>
+</body>
+</html>
