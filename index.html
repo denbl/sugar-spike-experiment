@@ -428,7 +428,7 @@
     <div>
       <h1>Walk off the sugar spike</h1>
       <p class="dek">Growth experiment prototype for Glow, a CGM app (fictional brand)</p>
-      <p class="sub">A push nudges weight-loss users to walk the moment the sensor sees glucose rising after a meal. Goal: more users on track with weight, higher M3 retention.</p>
+      <p class="sub">A push notification tells weight-loss users to walk the moment the sensor sees glucose rising after a meal. Goal: more users on-track with weight, higher M3 retention.</p>
     </div>
     <nav class="posts" aria-label="How to use this page">
       <a class="post" href="#flow" data-go="flow"><b>1</b><span>Walk through the user flow on the phone.</span></a>
@@ -539,7 +539,6 @@
 
     <aside class="demo" aria-label="Demo controls">
       <h2>Demo controls</h2>
-      <p class="hint">Outside the app. They drive the simulation on the phone.</p>
       <div class="seg" role="group" aria-label="Experiment group">
         <button id="gTest" aria-pressed="true">Test group</button>
         <button id="gCtrl" aria-pressed="false">Control group</button>
@@ -556,7 +555,7 @@
       <button class="reset" id="bReset">Reset</button>
       <div class="note" id="note" aria-live="polite"></div>
       <div class="toast" id="toast" role="status" aria-live="polite"></div>
-      <div class="log">
+      <div class="log" hidden>
         <h3>Logged events</h3>
         <ol id="log"><li class="empty">No events yet</li></ol>
       </div>
@@ -575,13 +574,13 @@
     <div class="tabpanel" id="p-design" role="tabpanel" aria-labelledby="tab-design">
       <section class="sec">
         <h2>Hypothesis</h2>
-        <p class="lead">If the app nudges weight-loss users to walk as soon as glucose starts rising after a meal, more of them stay on track with weight, and on-track users are more likely to still be with us in month 3.</p>
+        <p class="lead">If the app sends weight-loss users a push notification to walk as soon as glucose starts rising after a meal, more of them stay on-track with weight, and on-track users are more likely to still be with us in month 3.</p>
         <ol class="route" aria-label="Causal chain">
-          <li>Push “walk now”</li>
+          <li>Push notification “walk now”</li>
           <li>Lower sugar spike</li>
           <li>Smaller dip</li>
           <li class="as">Less hunger and snacking <span class="tag as">Assumption</span></li>
-          <li>On track with weight</li>
+          <li>On-track with weight</li>
           <li>M3 retention</li>
         </ol>
         <ul class="evi">
@@ -607,23 +606,23 @@
           <dt>Trigger rule</dt>
           <dd><ul>
             <li>Glucose <b>+<span data-cfg="glucose.trigger.rise"></span> mg/dL within <span data-cfg="glucose.trigger.windowMin"></span> min</b> after a meal.</li>
-            <li><span data-cfg="glucose.trigger.hours"></span> only; max <span data-cfg="glucose.trigger.maxPerDay"></span> nudges a day.</li>
-            <li>“Walked” = ≥<span data-cfg="glucose.steps.walkedThreshold"></span> steps within 30 min after the nudge (steps read from Apple Health / Google Fit).</li>
+            <li><span data-cfg="glucose.trigger.hours"></span> only; max <span data-cfg="glucose.trigger.maxPerDay"></span> push notifications a day.</li>
+            <li>“Walked” = ≥<span data-cfg="glucose.steps.walkedThreshold"></span> steps within 30 min after the push notification (steps read from Apple Health / Google Fit).</li>
           </ul></dd>
         </div>
         <div>
           <dt>Launch with minimal engineering</dt>
           <dd><p>The app already sends glucose alerts. This is a new rule and new copy in the existing alert system, a 50/50 feature flag, and a HealthKit step read.</p>
-            <p class="fine">Sample size: ~<span data-cfg="design.sampleSizeOnTrack"></span> users per group for on-track at day 28 (we enrol <span data-cfg="readout.n"></span>); ~<span data-cfg="design.sampleSizeRetention"></span> per group to read M3 retention directly, so retention is confirmed on the holdout and projected from on-track.</p></dd>
+            <p class="fine">Sample size: ~<span data-cfg="design.sampleSizeOnTrack"></span> users per group for on-track at day 28 (we enrol <span data-cfg="readout.n"></span>); ~<span data-cfg="design.sampleSizeRetention"></span> per group to read M3 retention directly, so the test decides on on-track and compares M3 retention at day 90.</p></dd>
         </div>
         <div>
           <dt>Metrics</dt>
           <dd>
-            <div class="mrow"><span class="tag k">Leading</span><div><b>Share of users on track at day 28</b> (decision metric) = losing ≥0.5% body weight per week (National DPP threshold). Weight from Apple Health or the in-app weight log. <span class="tag as">Assumption: weight is available</span></div></div>
+            <div class="mrow"><span class="tag k">Leading</span><div><b>Share of on-track users at day 28</b> (decision metric) = losing ≥0.5% body weight per week (National DPP threshold). Weight from Apple Health or the in-app weight log. <span class="tag as">Assumption: weight is available</span></div></div>
             <div class="mrow"><span class="tag k">Funnel</span><div>Opt-in rate (allowed notifications); walk rate after sugar spikes.</div></div>
             <div class="mrow"><span class="tag k">Mechanism</span><div>Post-meal peak rise after walked vs not-walked meals.</div></div>
-            <div class="mrow"><span class="tag g">Guardrail</span><div><b>Share of users who turn off notifications</b> – must not get worse. Turning them off also kills core glucose alerts.</div></div>
-            <div class="mrow"><span class="tag k">Long-term</span><div>M3 retention (cartridge purchase or active subscription in month 3). A 10% holdout is kept to day 90 to confirm.</div></div>
+            <div class="mrow"><span class="tag g">Guardrail</span><div><b>Cartridge reorder rate at day 28</b> – must not drop vs control. If push notifications annoy users, they stop buying.</div></div>
+            <div class="mrow"><span class="tag k">Long-term</span><div>M3 retention: the share of users who still buy cartridges in month 3. Test and control are compared at day 90.</div></div>
           </dd>
         </div>
         <div>
@@ -631,7 +630,7 @@
           <dd>
             <p class="fine" style="margin-bottom:10px">Written before launch.</p>
             <div class="rules">
-              <div class="rule"><span class="verdict v-ship">Ship</span><span>On-track rate up ≥<span data-cfg="readout.rule.shipPp"></span> pp and significant, AND opt-out up ≤<span data-cfg="readout.rule.guardPp"></span> pp.</span></div>
+              <div class="rule"><span class="verdict v-ship">Ship</span><span>On-track rate up ≥<span data-cfg="readout.rule.shipPp"></span> pp and significant, AND reorders do not drop.</span></div>
               <div class="rule"><span class="verdict v-iter">Iterate</span><span>Walking is up, but on-track is flat.</span></div>
               <div class="rule"><span class="verdict v-stop">Stop</span><span>Guardrail breached.</span></div>
             </div>
@@ -644,7 +643,7 @@
               <li style="--at:0%"><span class="lbl"><strong>Day 0</strong><span>Enrol</span></span></li>
               <li class="up" style="--at:15.56%"><span class="lbl"><strong>Day 14</strong><span>Funnel and guardrail check</span></span></li>
               <li class="key" style="--at:31.11%"><span class="lbl"><strong>Day 28</strong><span>Decision</span></span></li>
-              <li class="end" style="--at:100%"><span class="lbl"><strong>Day 90</strong><span>Retention confirmed on holdout</span></span></li>
+              <li class="end" style="--at:100%"><span class="lbl"><strong>Day 90</strong><span>M3 retention, test vs control</span></span></li>
             </ol>
           </dd>
         </div>
@@ -686,7 +685,7 @@
         </section>
         <div class="imp-out">
           <section>
-            <h2>How users move to on track <span class="tag as">Model</span></h2>
+            <h2>How users move to on-track <span class="tag as">Model</span></h2>
             <div class="wf" id="waterfall"></div>
             <p class="fine" id="chainLine" style="margin-top:12px"></p>
           </section>
@@ -738,14 +737,14 @@ const CONFIG = {
 
   // ---- Copy shown inside the phone ----
   copy: {
-    feature: { title: 'Sugar spike alerts', body: 'Get a nudge when your glucose starts to rise.' },
+    feature: { title: 'Sugar spike alerts', body: 'Get a push notification when your glucose starts to rise.' },
     value: {
       headline: 'Walk off the sugar spike',
       points: [
         'People with big glucose dips eat about 300 kcal more a day.',
         'A 10-minute walk right after a meal lowers the sugar spike by ~17%.',
         'Walk off the spike and you could lose up to 0.3 kg of extra fat a week.',
-        'We’ll send you a nudge the moment your glucose starts rising – at most 2 a day, never at night.'
+        'We’ll send you a push notification the moment your glucose starts rising – at most 2 a day, never at night.'
       ],
       primary: 'Turn on sugar spike alerts',
       secondary: 'Not now'
@@ -788,14 +787,13 @@ const CONFIG = {
   // ---- Readout scenarios (simulated, n per group) ----
   readout: {
     n: 2500,
-    rule: { shipPp: 3, guardPp: 2 },                // decision rule thresholds, pp
-    // Chip rules [Assumption]: 'up' = higher is better, 'down' = lower is better, 'guard' = must not rise by more than limit
+    rule: { shipPp: 3, guardPp: 1 },                // ship threshold; guardrail: reorders may not drop by more than guardPp (noise)
+    // Chip rules [Assumption]: 'up' = higher is better, 'down' = lower is better, 'guard' = must not drop by more than limit
     chips: {
       walked:  { type: 'up', pass: 10, fail: 0 },
       peak:    { type: 'down', pass: -8, fail: 0 },
       onTrack: { type: 'up', pass: 3, fail: -1 },
-      reorder: { type: 'up', pass: 1, fail: -1 },
-      optout:  { type: 'guard', limit: 2 }
+      reorder: { type: 'guard', limit: 1 }
     },
     lowerPeakNote: 'Lower peak = walkers whose average post-meal peak fell by ≥10 mg/dL vs their own first week [Assumption: ~80% of walkers].',
     scenarios: [
@@ -804,21 +802,21 @@ const CONFIG = {
         funnel: { optin: 85, nudged: 82, walked: 35, lowerPeak: 28 },          // % of enrolled test users
         m: { walked: [11, 35], peak: [52, 41], onTrack: [35.1, 39.3], reorder: [63.1, 66.0], optout: [3.6, 4.1] },
         m3: { projected: [27.0, 28.9] },               // control, test
-        decision: 'Ship to all new weight-loss users; keep a 10% holdout to day 90.'
+        decision: 'Ship to new weight-loss users. The first control group stays without push notifications to day 90 to compare M3 retention.'
       },
       {
         id: 'B', name: 'They walk, weight doesn’t move',
         funnel: { optin: 85, nudged: 82, walked: 34, lowerPeak: 27 },
         m: { walked: [11, 34], peak: [52, 42], onTrack: [35.1, 35.6], reorder: [63.1, 63.4], optout: [3.6, 4.0] },
         m3: { projected: [27.0, 27.1] },
-        decision: 'Mechanism breaks at “lower sugar spike → eat less”. Don’t ship as a weight feature; the next test pairs the nudge with a food swap.'
+        decision: 'Mechanism breaks at “lower sugar spike → eat less”. Don’t ship as a weight feature; the next test pairs the push notification with a food swap.'
       },
       {
         id: 'C', name: 'Users get annoyed',
         funnel: { optin: 85, nudged: 82, walked: 18, lowerPeak: 13 },
         m: { walked: [11, 18], peak: [52, 47], onTrack: [35.1, 35.9], reorder: [63.1, 61.2], optout: [3.6, 9.8] },
         m3: { projected: [27.0, 26.8] },
-        decision: 'Cut to 1 nudge a day, rewrite the copy, re-test.'
+        decision: 'Cut to 1 push notification a day, rewrite the copy, re-test.'
       }
     ]
   },
@@ -826,15 +824,15 @@ const CONFIG = {
   // ---- Impact model defaults (all inputs in %) ----
   impact: {
     inputs: [
-      { key: 'p0',    label: 'Users on track without the feature', def: 35, note: 'Assumption' },
+      { key: 'p0',    label: 'Users on-track without the feature', def: 35, note: 'Assumption' },
       { key: 'Ron',   label: 'M3 retention of on-track users', def: 55, note: 'Assumption' },
-      { key: 'Roff',  label: 'M3 retention of users not on track', def: 12, note: 'Assumption: users who don’t lose weight rarely buy more cartridges; 4 RCTs – users losing ≤2% in month 1 dropped out ~5x more often' },
+      { key: 'Roff',  label: 'M3 retention of users not on-track', def: 12, note: 'Assumption: users who don’t lose weight rarely buy more cartridges; 4 RCTs – users losing ≤2% in month 1 dropped out ~5x more often' },
       { key: 'optin', label: 'Allow notifications', def: 85, note: 'Assumption: users bought the device to lose weight; permission is asked in onboarding' },
-      { key: 'walk',  label: 'Of them, walk regularly with nudges (after at least every 2nd nudge)', def: 35, note: 'Assumption' },
-      { key: 'walkC', label: 'Walk regularly anyway, without nudges (control)', def: 10, note: 'Assumption: only the difference counts as the nudge effect' },
-      { key: 'conv',  label: 'Of regular walkers who were not on track, share who become on track', def: 31, note: 'Assumption: derived below' }
+      { key: 'walk',  label: 'Of them, walk regularly with push notifications (after at least every 2nd one)', def: 35, note: 'Assumption' },
+      { key: 'walkC', label: 'Walk regularly anyway, without push notifications (control)', def: 10, note: 'Assumption: only the difference counts as the push notification effect' },
+      { key: 'conv',  label: 'Of regular walkers who were not on-track, share who become on-track', def: 31, note: 'Assumption: derived below' }
     ],
-    convDerivation: 'Full walk day ≈ 350 kcal (≈300 less snacking after dips, ZOE + ≈50 for the walk) × 70% adherence ≈ 245 kcal/day ≈ 0.22 kg/week ≈ 0.25% body weight/week (90 kg). Users not on track spread evenly from +0.3% to −0.5% a week → 0.25 / 0.8 ≈ 31% cross the 0.5%/week line.'
+    convDerivation: 'Full walk day ≈ 350 kcal (≈300 less snacking after dips, ZOE + ≈50 for the walk) × 70% adherence ≈ 245 kcal/day ≈ 0.22 kg/week ≈ 0.25% body weight/week (90 kg). Users not on-track spread evenly from +0.3% to −0.5% a week → 0.25 / 0.8 ≈ 31% cross the 0.5%/week line.'
   },
 
   design: { sampleSizeOnTrack: '2,000', sampleSizeRetention: '9,300' }
@@ -895,8 +893,8 @@ function sampleSize(p1, p2) {
 // v: inputs in % (as shown in the UI). Returns shares (0..1).
 function impactModel(v) {
   const p0 = v.p0 / 100, Ron = v.Ron / 100, Roff = v.Roff / 100, optin = v.optin / 100, walk = v.walk / 100, walkC = v.walkC / 100, conv = v.conv / 100;
-  const extra = Math.max(walk - walkC, 0);          // extra regular walkers caused by the nudge
-  const movedShare = optin * extra * conv;          // share of not-on-track users who move to on track
+  const extra = Math.max(walk - walkC, 0);          // extra regular walkers caused by the push notification
+  const movedShare = optin * extra * conv;          // share of not-on-track users who move to on-track
   const moved = (1 - p0) * movedShare;             // share of all users who move
   const onTest = p0 + moved;
   const Rc = p0 * Ron + (1 - p0) * Roff;
@@ -909,15 +907,15 @@ function impactModel(v) {
 }
 
 function chipStatus(rule, d) {
-  if (rule.type === 'guard') return d <= rule.limit ? 'pass' : 'fail';
+  if (rule.type === 'guard') return d >= -rule.limit ? 'pass' : 'fail';
   if (rule.type === 'up') return d >= rule.pass ? 'pass' : d <= rule.fail ? 'fail' : 'flat';
   return d <= rule.pass ? 'pass' : d >= rule.fail ? 'fail' : 'flat';
 }
 
 function verdictFor(sc, R) {
-  const dOn = sc.m.onTrack[1] - sc.m.onTrack[0], dOpt = sc.m.optout[1] - sc.m.optout[0];
+  const dOn = sc.m.onTrack[1] - sc.m.onTrack[0], dRe = sc.m.reorder[1] - sc.m.reorder[0];
   const dWalk = sc.m.walked[1] - sc.m.walked[0];
-  if (dOpt > R.rule.guardPp) return 'stop';
+  if (dRe < -R.rule.guardPp) return 'stop';
   if (dOn >= R.rule.shipPp) return 'ship';
   if (dWalk > 0) return 'iter';
   return 'stop';
@@ -1040,7 +1038,7 @@ function verdictFor(sc, R) {
       const tx = X(G.lunch.at + M.tw), ty = Y(lunchVal(M.tw));
       const sent = nudgeOn();
       s += `<circle cx="${tx}" cy="${ty}" r="5" fill="#fff" stroke="${sent ? '#d4520f' : '#8e8e93'}" stroke-width="2"/>`;
-      s += `<text x="${tx - 7}" y="${ty - 2}" font-size="8.5" text-anchor="end" fill="${sent ? '#b8460c' : '#8e8e93'}" font-weight="700">${sent ? 'Nudge' : 'Logged'}</text>`;
+      s += `<text x="${tx - 7}" y="${ty - 2}" font-size="8.5" text-anchor="end" fill="${sent ? '#b8460c' : '#8e8e93'}" font-weight="700">${sent ? 'Push' : 'Logged'}</text>`;
     }
     // now cursor
     const cx = X(head[0]), cy = Y(head[1]);
@@ -1115,11 +1113,11 @@ function verdictFor(sc, R) {
       h += `<div class="wk-hero"><small>This week</small><div class="num">${W.spikesWalked} of ${W.spikesTotal}</div><p>sugar spikes walked off</p>
         <div class="streak">${days.map((d, i) => `<div><i class="${W.walkDays[i] ? 'on' : ''}"></i>${d}</div>`).join('')}</div></div>`;
       h += `<div class="pcard"><div class="wk-row"><span class="icon-circle"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 15 C7 15 8 7 12 7 S16 15 21 13" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg></span><div class="grow"><h4>Average sugar spike ${fmtSigned(W.avgSpikeDelta, 0)} mg/dL</h4><p>on walk days vs days without a walk</p></div></div></div>`;
-      h += `<div class="pcard"><div class="wk-row"><div class="grow"><h4>${fmtSigned(W.weightDelta)} kg this week · ${W.onTrack ? 'on track' : 'below target pace'}</h4><p>Weight from Apple Health</p></div>${sparkline(W.weights, '#1f7a4d')}</div></div>`;
+      h += `<div class="pcard"><div class="wk-row"><div class="grow"><h4>${fmtSigned(W.weightDelta)} kg this week · ${W.onTrack ? 'on-track' : 'below target pace'}</h4><p>Weight from Apple Health</p></div>${sparkline(W.weights, '#1f7a4d')}</div></div>`;
     } else {
       const W = CONFIG.week.control;
       h += `<div class="wk-hero plain"><small>This week</small><div class="num">${W.timeInRange}%</div><p>time in range · average ${W.avgGlucose} mg/dL</p></div>`;
-      h += `<div class="pcard"><div class="wk-row"><div class="grow"><h4>${fmtSigned(W.weightDelta)} kg this week · ${W.onTrack ? 'on track' : 'below target pace'}</h4><p>Weight from Apple Health</p></div>${sparkline(W.weights, '#8e8e93')}</div></div>`;
+      h += `<div class="pcard"><div class="wk-row"><div class="grow"><h4>${fmtSigned(W.weightDelta)} kg this week · ${W.onTrack ? 'on-track' : 'below target pace'}</h4><p>Weight from Apple Health</p></div>${sparkline(W.weights, '#8e8e93')}</div></div>`;
       h += `<p class="wk-note">Standard weekly report: no sugar spike alerts for this user.</p>`;
     }
     h += `<span class="demo-tag">Simulated demo data</span>`;
@@ -1139,7 +1137,7 @@ function verdictFor(sc, R) {
     if ($('perm').classList.contains('show')) return 'iOS system dialog. Allow or Don’t Allow.';
     if (S.screen === 'week') return nudgeOn() ? 'Week summary: walks, sugar spike size and weight trend.' : 'Week summary: the standard report, no sugar spike stats.';
     if (S.lunch === 'none') {
-      if (ctrl) return 'Control group: the standard app. No intro, no nudges. The same trigger runs silently and is only logged. Start with step 2.';
+      if (ctrl) return 'Control group: the standard app. No intro, no push notifications. The same trigger runs silently and is only logged. Start with step 2.';
       if (!S.introDone) return 'Test group: the user sees a new Sugar spike alerts card. Start with step 1 (or tap the card).';
       if (S.opted === true) return 'Opted in. Now simulate lunch.';
       return S.opted === false && S.deny ? 'No alerts for this user (counted as not opted in).' : 'User tapped Not now: no alerts (counted as not opted in).';
@@ -1147,11 +1145,12 @@ function verdictFor(sc, R) {
     if (S.lunch === 'running' && !S.triggered) return `Lunch at ${hhmm(G.lunch.at)}. The sensor reads glucose every ${G.lunch.step} min.`;
     if (S.lunch === 'paused') {
       const rise = `+${Math.round(M.triggerRise)} mg/dL in ${M.tw} min`;
-      if (nudgeOn()) return `Trigger fired at ${hhmm(G.lunch.at + M.tw)} (${rise}). Push sent. Choose what the user does.`;
-      return `Trigger fired at ${hhmm(G.lunch.at + M.tw)} (${rise}). ${ctrl ? 'Control' : 'Not opted in'}: logged, not sent. Without a nudge the demo keeps the usual curve for both choices.`;
+      if (nudgeOn()) return `Trigger fired at ${hhmm(G.lunch.at + M.tw)} (${rise}). Push notification sent. Choose what the user does.`;
+      return `Trigger fired at ${hhmm(G.lunch.at + M.tw)} (${rise}). ${ctrl ? 'Control' : 'Not opted in'}: logged, not sent. Without a push notification the demo keeps the usual curve for both choices.`;
     }
     if (S.lunch === 'running') {
       if (S.choice === 'walk' && nudgeOn()) return 'User walks. Steps come from Apple Health; the curve bends lower. Dashed grey = usual curve.';
+      if (!nudgeOn() && S.triggered) return `${S.group === 'control' ? 'Control' : 'Not opted in'}: no push notification, so the day goes on as usual: the sugar spike, then a dip below baseline.`;
       return 'Usual post-meal curve: the sugar spike, then a dip below baseline.';
     }
     if (S.lunch === 'done') return 'Lunch done. Open the week summary.';
@@ -1215,11 +1214,14 @@ function verdictFor(sc, R) {
     S.raf = requestAnimationFrame(tick); render();
   }
   function onTrigger() {
-    S.triggered = true; S.lunch = 'paused';
+    S.triggered = true;
     const props = { group: S.group, rise: '+' + Math.round(M.triggerRise), sent: nudgeOn() };
     logEvent('spike_trigger', props);
-    if (nudgeOn()) { $('push').classList.add('show'); logEvent('push_sent'); }
-    else toast(S.group === 'control' ? 'Control: alert logged, not sent' : 'Not opted in: alert logged, not sent');
+    if (nudgeOn()) { S.lunch = 'paused'; $('push').classList.add('show'); logEvent('push_sent'); return false; }
+    // No push notification: nothing to choose, the day goes on as usual
+    S.choice = 'ignore'; S.lunch = 'running'; S.lastTs = null;
+    toast(S.group === 'control' ? 'Control: sugar spike logged, no push notification' : 'Not opted in: sugar spike logged, no push notification');
+    return true;
   }
   function choose(c) {
     if (S.lunch !== 'paused') return;
@@ -1237,7 +1239,7 @@ function verdictFor(sc, R) {
     if (S.lastTs == null) S.lastTs = ts;
     const dt = Math.min(0.1, (ts - S.lastTs) / 1000); S.lastTs = ts;
     let t = S.simT + dt * G.lunch.duration / G.lunch.animSeconds;
-    if (!S.triggered && t >= M.tw) { S.simT = M.tw; onTrigger(); render(); S.raf = null; return; }
+    if (!S.triggered && t >= M.tw) { S.simT = M.tw; const go = onTrigger(); render(); S.raf = go ? requestAnimationFrame(tick) : null; return; }
     if (t >= G.lunch.duration) { S.simT = G.lunch.duration; onLunchDone(); render(); S.raf = null; return; }
     S.simT = t;
     if (S.choice === 'walk' && nudgeOn() && !S.walkLogged && stepsNow() >= G.steps.walkedThreshold) {
@@ -1314,7 +1316,7 @@ function verdictFor(sc, R) {
     const sc = RO.scenarios[scen], n = RO.n;
     $('scenSeg').querySelectorAll('button').forEach((b, i) => b.setAttribute('aria-pressed', String(i === scen)));
     const f = sc.funnel;
-    const rows = [['Enrolled', 100], ['Allowed notifications', f.optin], ['Got ≥1 nudge', f.nudged], ['Walked after ≥half of sugar spikes', f.walked], ['Lower peak', f.lowerPeak]];
+    const rows = [['Enrolled', 100], ['Allowed notifications', f.optin], ['Got ≥1 push notification', f.nudged], ['Walked after ≥half of sugar spikes', f.walked], ['Lower peak', f.lowerPeak]];
     $('funnel').innerHTML = rows.map(([l, p]) => `<div class="frow"><span>${l}</span><div class="ftrack"><i style="width:${p}%"></i></div><span class="fval"><b>${fmtInt(n * p / 100)}</b> <small>${p}%</small></span></div>`).join('');
     $('funnelNote').textContent = `n = ${fmtInt(n)} per group. ` + RO.lowerPeakNote;
 
@@ -1323,9 +1325,8 @@ function verdictFor(sc, R) {
     const defs = [
       ['walked', 'Walked after ≥half of sugar spikes', '', v => v + '%', ' pp', 0],
       ['peak', 'Avg post-meal peak rise', 'Mechanism', v => v + ' mg/dL', ' mg/dL', 0],
-      ['onTrack', 'On track at day 28', 'Leading – decision metric', pct, ' pp', 1],
-      ['reorder', 'Reordered cartridges / subscription active at day 28', '', pct, ' pp', 1],
-      ['optout', 'Notifications turned off', 'Guardrail – limit +' + RO.rule.guardPp + ' pp', pct, ' pp', 1]
+      ['onTrack', 'On-track at day 28', 'Leading – decision metric', pct, ' pp', 1],
+      ['reorder', 'Cartridge reorder rate at day 28', 'Guardrail – must not drop', pct, ' pp', 1]
     ];
     let t = `<thead><tr><th>Metric</th><th class="num">Control</th><th class="num">Test</th><th class="num">Δ</th><th>Status</th></tr></thead><tbody>`;
     defs.forEach(([k, label, sub, fv, du, dd]) => {
@@ -1342,9 +1343,9 @@ function verdictFor(sc, R) {
 
     const v = verdictFor(sc, RO);
     const vName = { ship: 'Ship', iter: 'Iterate', stop: 'Stop' }[v];
-    const dOn = m.onTrack[1] - m.onTrack[0], dOpt = m.optout[1] - m.optout[0];
-    const why = `On track ${fmtSigned(dOn)} pp (ship needs ≥${RO.rule.shipPp} pp); opt-out ${fmtSigned(dOpt)} pp (limit ${RO.rule.guardPp} pp)` +
-      (v === 'stop' && dOpt > RO.rule.guardPp ? ' – guardrail breached.' : v === 'iter' ? ' – walking is up, on-track is flat.' : '.');
+    const dOn = m.onTrack[1] - m.onTrack[0], dRe = m.reorder[1] - m.reorder[0];
+    const why = `On-track ${fmtSigned(dOn)} pp (ship needs ≥${RO.rule.shipPp} pp); reorders ${fmtSigned(dRe)} pp (must not drop)` +
+      (v === 'stop' && dRe < -RO.rule.guardPp ? ' – guardrail breached.' : v === 'iter' ? ' – walking is up, on-track is flat.' : '.');
     const el = $('decision');
     el.className = 'decision ' + v;
     el.innerHTML = `<h2>Decision</h2><div class="dec-row"><span class="verdict v-${v}">${vName}</span><p class="dec-text">${esc(sc.decision)}</p></div><p class="fine">Rule applied: ${esc(why)}</p>`;
@@ -1372,23 +1373,23 @@ function verdictFor(sc, R) {
     const r = impactModel(vals);
     // chain in percentages: each bar is the share of the previous step
     const steps = [
-      ['Not on track', 1 - r.p0, 'of all users'],
+      ['Not on-track', 1 - r.p0, 'of all users'],
       ['Allow notifications', r.optin, 'of them'],
-      ['Extra regular walkers', r.extra, `of them (${Math.round(r.walk * 100)}% with nudges − ${Math.round(r.walkC * 100)}% anyway)`],
-      ['Become on track', r.conv, 'of them']
+      ['Extra regular walkers', r.extra, `of them (${Math.round(r.walk * 100)}% with push notifications − ${Math.round(r.walkC * 100)}% anyway)`],
+      ['Become on-track', r.conv, 'of them']
     ];
     $('waterfall').innerHTML = steps.map(([l, x, sub]) => `<div class="wrow"><span>${l}<small>${sub}</small></span><div class="wtrack"><i style="width:${(x * 100).toFixed(1)}%"></i></div><b>${Math.round(x * 100)}%</b></div>`).join('') +
       `<div class="wrow hi"><span><b>= ${p1(r.movedShare)} of them move</b></span><div class="wtrack"><i style="width:${(r.movedShare * 100).toFixed(1)}%"></i></div><b>${fmtSigned(r.moved * 100)} pp</b></div>`;
-    $('chainLine').textContent = `Not on track ${Math.round((1 - r.p0) * 100)}% \u2192 allow notifications ${Math.round(r.optin * 100)}% \u2192 extra regular walkers ${Math.round(r.extra * 100)}% (${Math.round(r.walk * 100)}% with nudges − ${Math.round(r.walkC * 100)}% anyway) \u2192 become on track ${Math.round(r.conv * 100)}% = ${p1(r.movedShare)} of them move = ${fmtSigned(r.moved * 100)} pp of all users.`;
+    $('chainLine').textContent = `Not on-track ${Math.round((1 - r.p0) * 100)}% \u2192 allow notifications ${Math.round(r.optin * 100)}% \u2192 extra regular walkers ${Math.round(r.extra * 100)}% (${Math.round(r.walk * 100)}% with push notifications − ${Math.round(r.walkC * 100)}% anyway) \u2192 become on-track ${Math.round(r.conv * 100)}% = ${p1(r.movedShare)} of them move = ${fmtSigned(r.moved * 100)} pp of all users.`;
     $('cmp').innerHTML = `<thead><tr><th>Metric</th><th class="num">Control</th><th class="num">Test</th><th class="num">\u0394</th></tr></thead><tbody>
-      <tr><td class="lbl">On track at day 28</td><td class="num">${p1(r.onC)}</td><td class="num">${p1(r.onT)}</td><td class="num">${fmtSigned((r.onT - r.onC) * 100)} pp</td></tr>
+      <tr><td class="lbl">On-track at day 28</td><td class="num">${p1(r.onC)}</td><td class="num">${p1(r.onT)}</td><td class="num">${fmtSigned((r.onT - r.onC) * 100)} pp</td></tr>
       <tr><td class="lbl">M3 retention</td><td class="num">${p1(r.Rc)}</td><td class="num">${p1(r.Rt)}</td><td class="num"><b>${fmtSigned(r.upliftPp)} pp</b><small class="rel">${fmtSigned(r.upliftRel)}% relative</small></td></tr></tbody>`;
-    $('gainLine').textContent = `Each user moved to on track gains ${fmtSigned((r.Ron - r.Roff) * 100, 0)} pp chance to stay (${Math.round(r.Roff * 100)}% \u2192 ${Math.round(r.Ron * 100)}%).`;
+    $('gainLine').textContent = `Each user moved to on-track gains ${fmtSigned((r.Ron - r.Roff) * 100, 0)} pp chance to stay (${Math.round(r.Roff * 100)}% \u2192 ${Math.round(r.Ron * 100)}%).`;
     $('kpis').innerHTML =
       `<div class="kpi"><small>For on-track at day 28</small><b title="${isFinite(r.nOnTrack) ? fmtInt(r.nOnTrack) : ''}">${nFmt(r.nOnTrack)}</b></div>` +
       `<div class="kpi"><small>For M3 retention</small><b title="${isFinite(r.nRetention) ? fmtInt(r.nRetention) : ''}">${nFmt(r.nRetention)}</b></div>`;
     const ratio = r.nRetention / r.nOnTrack;
-    $('nNote').textContent = 'Two proportions, 80% power, alpha 0.05.' + (isFinite(ratio) ? ` Retention needs ~${Math.round(ratio)}x more users, so the test decides on on-track at day 28 (we enrol ${fmtInt(CONFIG.readout.n)} per group); retention is confirmed on the holdout.` : '');
+    $('nNote').textContent = 'Two proportions, 80% power, alpha 0.05.' + (isFinite(ratio) ? ` Retention needs ~${Math.round(ratio)}x more users, so the test decides on on-track at day 28 (we enrol ${fmtInt(CONFIG.readout.n)} per group); M3 retention is compared at day 90.` : '');
   }
   drawImpact();
 
